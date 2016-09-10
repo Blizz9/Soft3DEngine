@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using SharpDX;
@@ -27,10 +28,10 @@ namespace Soft3DEngine
             }
         }
 
-        public void Render(UnityCamera camera, params UnityMesh[] meshes)
+        public void Render(UnityCamera camera, List<UnityMesh> meshes)
         {
             Matrix viewMatrix = createLHLookAt(camera.Position, camera.Target, Vector3.UnitY);
-            Matrix projectionMatrix = createLHPerspective(.78f, (float)_renderTarget.PixelWidth / _renderTarget.PixelHeight, .01f, 1);
+            Matrix projectionMatrix = createRHPerspective(.78f, (float)_renderTarget.PixelWidth / _renderTarget.PixelHeight, .01f, 1);
 
             foreach (UnityMesh mesh in meshes)
             {
@@ -52,6 +53,8 @@ namespace Soft3DEngine
                     drawLine(pointC, pointA);
                 }
             }
+
+            drawPoint(new Vector2(0, 0));
         }
 
         public void Present()
@@ -127,7 +130,7 @@ namespace Soft3DEngine
 
             // offset the point from center to top-left of screen
             float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2f;
-            float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2f;
+            float offsetPointY = point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2f;
 
             return (new Vector2(offsetPointX, offsetPointY));
         }
@@ -155,19 +158,19 @@ namespace Soft3DEngine
             return (lhLookAT);
         }
 
-        private Matrix createLHPerspective(float fieldOfView, float aspect, float nearClipPlane, float farClipPlane)
+        private Matrix createRHPerspective(float fieldOfView, float aspect, float nearClipPlane, float farClipPlane)
         {
             float yScale = (float)(1f / Math.Tan(fieldOfView * .5f));
-            float q = farClipPlane / (farClipPlane - nearClipPlane);
+            float q = farClipPlane / (nearClipPlane - farClipPlane);
 
-            Matrix lhPerspective = new Matrix();
-            lhPerspective.M11 = yScale / aspect;
-            lhPerspective.M22 = yScale;
-            lhPerspective.M33 = q;
-            lhPerspective.M34 = 1;
-            lhPerspective.M43 = -q * nearClipPlane;
+            Matrix rhPerspective = new Matrix();
+            rhPerspective.M11 = yScale / aspect;
+            rhPerspective.M22 = yScale;
+            rhPerspective.M33 = q;
+            rhPerspective.M34 = -1;
+            rhPerspective.M43 = q * nearClipPlane;
 
-            return (lhPerspective);
+            return (rhPerspective);
         }
     }
 }
