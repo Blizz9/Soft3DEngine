@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using SharpDX;
 
@@ -36,10 +37,19 @@ namespace Soft3DEngine
                 Matrix worldMatrix = Matrix.RotationYawPitchRoll(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix.Translation(mesh.Position);
                 Matrix transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                foreach (Vector3 vertex in mesh.Vertices)
+                foreach (Face face in mesh.Faces)
                 {
-                    Vector2 point = project(vertex, transformationMatrix);
-                    drawPoint(point);
+                    Vector3 vertexA = mesh.Vertices[face.A];
+                    Vector3 vertexB = mesh.Vertices[face.B];
+                    Vector3 vertexC = mesh.Vertices[face.C];
+
+                    Vector2 pointA = project(vertexA, transformationMatrix);
+                    Vector2 pointB = project(vertexB, transformationMatrix);
+                    Vector2 pointC = project(vertexC, transformationMatrix);
+
+                    drawLine(pointA, pointB);
+                    drawLine(pointB, pointC);
+                    drawLine(pointC, pointA);
                 }
             }
         }
@@ -65,6 +75,44 @@ namespace Soft3DEngine
             // cull any points outside the render target
             if ((point.X >= 0) && (point.Y >= 0) && (point.X < _renderTarget.PixelWidth) && (point.Y < _renderTarget.PixelHeight))
                 putPixel((int)point.X, (int)point.Y, new Color4(1.0f, 1.0f, 0.0f, 1.0f));
+        }
+
+        public void drawLine(Vector2 point0, Vector2 point1)
+        {
+            // Bresenham's line algorithm
+
+            int x0 = (int)point0.X;
+            int y0 = (int)point0.Y;
+            int x1 = (int)point1.X;
+            int y1 = (int)point1.Y;
+
+            int dx = Math.Abs(x1 - x0);
+            int dy = Math.Abs(y1 - y0);
+            int sx = (x0 < x1) ? 1 : -1;
+            int sy = (y0 < y1) ? 1 : -1;
+            int error = dx - dy;
+
+            while (true)
+            {
+                drawPoint(new Vector2(x0, y0));
+
+                if ((x0 == x1) && (y0 == y1))
+                    break;
+
+                int doubleError = 2 * error;
+
+                if (doubleError > -dy)
+                {
+                    error -= dy;
+                    x0 += sx;
+                }
+
+                if (doubleError < dx)
+                {
+                    error += dx;
+                    y0 += sy;
+                }
+            }
         }
 
         private Vector2 project(Vector3 pointCoordinates, Matrix transformationMatrix)

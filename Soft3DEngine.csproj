@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Face.cs" />
     <Compile Include="UnityCamera.cs" />
     <Compile Include="UnityDevice.cs" />
     <Compile Include="UnityMesh.cs" />
