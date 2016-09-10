@@ -1,20 +1,18 @@
-﻿using SharpDX;
-
-namespace Soft3DEngine
+﻿namespace Soft3DEngine
 {
     public class Mesh
     {
         public string Name { get; set; }
-        public Vector3[] Vertices { get; private set; }
-        public Face[] Faces { get; set; }
-        public Vector3 Position { get; set; }
-        public Vector3 Rotation { get; set; }
+        public UnityVector3[] Vertices { get; private set; }
+        public Face[] Faces { get; private set; }
+        public UnityVector3 Position { get; set; }
+        public UnityVector3 Rotation { get; set; }
 
-        public Mesh(string name, int verticesCount, int facesCount)
+        public Mesh(string name, int vertexCount, int faceCount)
         {
-            Vertices = new Vector3[verticesCount];
-            Faces = new Face[facesCount];
             Name = name;
+            Vertices = new UnityVector3[vertexCount];
+            Faces = new Face[faceCount];
         }
     }
 }

@@ -1,10 +1,8 @@
-﻿using SharpDX;
-
-namespace Soft3DEngine
+﻿namespace Soft3DEngine
 {
     public class Camera
     {
-        public Vector3 Position { get; set; }
-        public Vector3 Target { get; set; }
+        public UnityVector3 Position { get; set; }
+        public UnityVector3 Target { get; set; }
     }
 }
