@@ -3,6 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Soft 3D Engine" Height="795" Width="1024" Loaded="loaded">
     <Grid>
-        <Image x:Name="screen"/>
+        <Image x:Name="screen" />
     </Grid>
 </Window>
