@@ -64,7 +64,9 @@
     <Compile Include="Face.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="Matrix4x4.cs" />
     <Compile Include="Mesh.cs" />
+    <Compile Include="UnityQuaternion.cs" />
     <Compile Include="UnityVector2.cs" />
     <Compile Include="UnityVector3.cs" />
     <Compile Include="UnityVector4.cs" />
@@ -103,6 +105,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Suzanne.model.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Mario.model.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Properties\Settings.settings">

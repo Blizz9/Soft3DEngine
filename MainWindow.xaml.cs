@@ -30,10 +30,15 @@ namespace Soft3DEngine
             _device = new Device(screenBuffer);
 
             _camera = new Camera();
+
+            _meshes = loadModelJSON("Suzanne.model.json");
+            //_meshes = loadModelJSON("Domino.model.json");
             _camera.Position = new UnityVector3(0, 0, 10);
             _camera.Target = UnityVector3.Zero;
 
-            _meshes = loadModelJSON("Suzanne.model.json");
+            //_meshes = loadModelJSON("Mario.model.json");
+            //_camera.Position = new UnityVector3(0, 1.8f, 10);
+            //_camera.Target = new UnityVector3(0, 1.8f, 0);
 
             CompositionTarget.Rendering += compositionTargetRendering;
         }

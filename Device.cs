@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using SharpDX;
 
 namespace Soft3DEngine
 {
@@ -30,15 +29,15 @@ namespace Soft3DEngine
 
         public void Render(Camera camera, List<Mesh> meshes)
         {
-            Matrix viewMatrix = createLHLookAt(camera.Position, camera.Target, UnityVector3.Up);
-            Matrix projectionMatrix = createRHPerspective(.78f, (float)_renderTarget.PixelWidth / _renderTarget.PixelHeight, .01f, 1);
+            Matrix4x4 viewMatrix = createLHLookAt(camera.Position, camera.Target, UnityVector3.Up);
+            Matrix4x4 projectionMatrix = createRHPerspective(.78f, (float)_renderTarget.PixelWidth / _renderTarget.PixelHeight, .01f, 1);
 
             foreach (Mesh mesh in meshes)
             {
-                Vector3 tempSharpDXVector3 = new Vector3(mesh.Position.X, mesh.Position.Y, mesh.Position.Z);
-                Matrix worldMatrix = Matrix.RotationYawPitchRoll(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix.Translation(tempSharpDXVector3);
-                //Matrix worldMatrix = Matrix.RotationYawPitchRoll(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix.Translation(mesh.Position);
-                Matrix transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
+                //Vector3 tempSharpDXVector3 = new Vector3(mesh.Position.X, mesh.Position.Y, mesh.Position.Z);
+                //Matrix worldMatrix = Matrix.RotationYawPitchRoll(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix.Translation(tempSharpDXVector3);
+                Matrix4x4 worldMatrix = rotationYawPitchRoll(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * translation(mesh.Position);
+                Matrix4x4 transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
                 foreach (Face face in mesh.Faces)
                 {
@@ -118,13 +117,13 @@ namespace Soft3DEngine
             }
         }
 
-        private UnityVector2 project(UnityVector3 pointCoordinates, Matrix transformationMatrix)
+        private UnityVector2 project(UnityVector3 pointCoordinates, Matrix4x4 transformationMatrix)
         {
             UnityVector4 transformationVector = new UnityVector4();
-            transformationVector.X = (pointCoordinates.X * transformationMatrix.M11) + (pointCoordinates.Y * transformationMatrix.M21) + (pointCoordinates.Z * transformationMatrix.M31) + transformationMatrix.M41;
-            transformationVector.Y = (pointCoordinates.X * transformationMatrix.M12) + (pointCoordinates.Y * transformationMatrix.M22) + (pointCoordinates.Z * transformationMatrix.M32) + transformationMatrix.M42;
-            transformationVector.Z = (pointCoordinates.X * transformationMatrix.M13) + (pointCoordinates.Y * transformationMatrix.M23) + (pointCoordinates.Z * transformationMatrix.M33) + transformationMatrix.M43;
-            transformationVector.W = 1f / ((pointCoordinates.X * transformationMatrix.M14) + (pointCoordinates.Y * transformationMatrix.M24) + (pointCoordinates.Z * transformationMatrix.M34) + transformationMatrix.M44);
+            transformationVector.X = (pointCoordinates.X * transformationMatrix.M00) + (pointCoordinates.Y * transformationMatrix.M10) + (pointCoordinates.Z * transformationMatrix.M20) + transformationMatrix.M30;
+            transformationVector.Y = (pointCoordinates.X * transformationMatrix.M01) + (pointCoordinates.Y * transformationMatrix.M11) + (pointCoordinates.Z * transformationMatrix.M21) + transformationMatrix.M31;
+            transformationVector.Z = (pointCoordinates.X * transformationMatrix.M02) + (pointCoordinates.Y * transformationMatrix.M12) + (pointCoordinates.Z * transformationMatrix.M22) + transformationMatrix.M32;
+            transformationVector.W = 1f / ((pointCoordinates.X * transformationMatrix.M03) + (pointCoordinates.Y * transformationMatrix.M13) + (pointCoordinates.Z * transformationMatrix.M23) + transformationMatrix.M33);
 
             UnityVector3 point = new UnityVector3(transformationVector.X * transformationVector.W, transformationVector.Y * transformationVector.W, transformationVector.Z * transformationVector.W);
 
@@ -135,7 +134,7 @@ namespace Soft3DEngine
             return (new UnityVector2(offsetPointX, offsetPointY));
         }
 
-        private Matrix createLHLookAt(UnityVector3 position, UnityVector3 target, UnityVector3 up)
+        private Matrix4x4 createLHLookAt(UnityVector3 position, UnityVector3 target, UnityVector3 up)
         {
             UnityVector3 xAxis;
             UnityVector3 yAxis;
@@ -149,41 +148,106 @@ namespace Soft3DEngine
 
             yAxis = UnityVector3.Cross(zAxis, xAxis);
 
-            Matrix lhLookAT = Matrix.Identity;
-            lhLookAT.M11 = xAxis.X;
-            lhLookAT.M12 = yAxis.X;
-            lhLookAT.M13 = zAxis.X;
-            lhLookAT.M21 = xAxis.Y;
-            lhLookAT.M22 = yAxis.Y;
-            lhLookAT.M23 = zAxis.Y;
-            lhLookAT.M31 = xAxis.Z;
-            lhLookAT.M32 = yAxis.Z;
-            lhLookAT.M33 = zAxis.Z;
+            Matrix4x4 lhLookAT = Matrix4x4.Identity;
+            lhLookAT.M00 = xAxis.X;
+            lhLookAT.M01 = yAxis.X;
+            lhLookAT.M02 = zAxis.X;
+            lhLookAT.M10 = xAxis.Y;
+            lhLookAT.M11 = yAxis.Y;
+            lhLookAT.M12 = zAxis.Y;
+            lhLookAT.M20 = xAxis.Z;
+            lhLookAT.M21 = yAxis.Z;
+            lhLookAT.M22 = zAxis.Z;
 
-            lhLookAT.M41 = UnityVector3.Dot(xAxis, position);
-            lhLookAT.M42 = UnityVector3.Dot(yAxis, position);
-            lhLookAT.M43 = UnityVector3.Dot(zAxis, position);
+            lhLookAT.M30 = UnityVector3.Dot(xAxis, position);
+            lhLookAT.M31 = UnityVector3.Dot(yAxis, position);
+            lhLookAT.M32 = UnityVector3.Dot(zAxis, position);
 
-            lhLookAT.M41 = -lhLookAT.M41;
-            lhLookAT.M42 = -lhLookAT.M42;
-            lhLookAT.M43 = -lhLookAT.M43;
+            lhLookAT.M30 = -lhLookAT.M30;
+            lhLookAT.M31 = -lhLookAT.M31;
+            lhLookAT.M32 = -lhLookAT.M32;
 
             return (lhLookAT);
         }
 
-        private Matrix createRHPerspective(float fieldOfView, float aspect, float nearClipPlane, float farClipPlane)
+        private Matrix4x4 createRHPerspective(float fieldOfView, float aspect, float nearClipPlane, float farClipPlane)
         {
             float yScale = (float)(1f / Math.Tan(fieldOfView * .5f));
             float q = farClipPlane / (nearClipPlane - farClipPlane);
 
-            Matrix rhPerspective = new Matrix();
-            rhPerspective.M11 = yScale / aspect;
-            rhPerspective.M22 = yScale;
-            rhPerspective.M33 = q;
-            rhPerspective.M34 = -1;
-            rhPerspective.M43 = q * nearClipPlane;
+            Matrix4x4 rhPerspective = new Matrix4x4();
+            rhPerspective.M00 = yScale / aspect;
+            rhPerspective.M11 = yScale;
+            rhPerspective.M22 = q;
+            rhPerspective.M23 = -1;
+            rhPerspective.M32 = q * nearClipPlane;
 
             return (rhPerspective);
+        }
+
+        private Matrix4x4 rotationQuaternion(UnityQuaternion rotation)
+        {
+            float xx = rotation.X * rotation.X;
+            float yy = rotation.Y * rotation.Y;
+            float zz = rotation.Z * rotation.Z;
+            float xy = rotation.X * rotation.Y;
+            float zw = rotation.Z * rotation.W;
+            float zx = rotation.Z * rotation.X;
+            float yw = rotation.Y * rotation.W;
+            float yz = rotation.Y * rotation.Z;
+            float xw = rotation.X * rotation.W;
+
+            Matrix4x4 rotationMatrix = Matrix4x4.Identity;
+            rotationMatrix.M00 = 1.0f - (2.0f * (yy + zz));
+            rotationMatrix.M01 = 2.0f * (xy + zw);
+            rotationMatrix.M02 = 2.0f * (zx - yw);
+            rotationMatrix.M10 = 2.0f * (xy - zw);
+            rotationMatrix.M11 = 1.0f - (2.0f * (zz + xx));
+            rotationMatrix.M12 = 2.0f * (yz + xw);
+            rotationMatrix.M20 = 2.0f * (zx + yw);
+            rotationMatrix.M21 = 2.0f * (yz - xw);
+            rotationMatrix.M22 = 1.0f - (2.0f * (yy + xx));
+
+            return (rotationMatrix);
+        }
+
+        private Matrix4x4 rotationYawPitchRoll(float yaw, float pitch, float roll)
+        {
+            UnityQuaternion quaternion = quaternionRotationYawPitchRoll(yaw, pitch, roll);
+
+            return (rotationQuaternion(quaternion));
+        }
+
+        private UnityQuaternion quaternionRotationYawPitchRoll(float yaw, float pitch, float roll)
+        {
+            float halfRoll = roll * .5f;
+            float halfPitch = pitch * .5f;
+            float halfYaw = yaw * .5f;
+
+            float sinRoll = (float)Math.Sin(halfRoll);
+            float cosRoll = (float)Math.Cos(halfRoll);
+            float sinPitch = (float)Math.Sin(halfPitch);
+            float cosPitch = (float)Math.Cos(halfPitch);
+            float sinYaw = (float)Math.Sin(halfYaw);
+            float cosYaw = (float)Math.Cos(halfYaw);
+
+            UnityQuaternion quaternion = new UnityQuaternion();
+            quaternion.X = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);
+            quaternion.Y = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);
+            quaternion.Z = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);
+            quaternion.W = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);
+
+            return (quaternion);
+        }
+
+        private Matrix4x4 translation(UnityVector3 value)
+        {
+            Matrix4x4 translationMatrix = Matrix4x4.Identity;
+            translationMatrix.M30 = value.X;
+            translationMatrix.M31 = value.Y;
+            translationMatrix.M32 = value.Z;
+
+            return (translationMatrix);
         }
     }
 }
