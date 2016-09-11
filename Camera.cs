@@ -13,7 +13,7 @@ namespace Soft3DEngine
 
         public Matrix4x4 CreateProjectionMatrix()
         {
-            float yScale = (float)(1f / Math.Tan(FieldOfView * .5f));
+            float yScale = (float)(1f / Math.Tan(FieldOfView * 0.5f));
             float q = FarClipPlane / (FarClipPlane - NearClipPlane);
 
             Matrix4x4 projection = new Matrix4x4();
@@ -21,7 +21,7 @@ namespace Soft3DEngine
             projection.M00 = yScale / Aspect;
             projection.M11 = yScale;
             projection.M22 = q;
-            projection.M23 = 1;
+            projection.M23 = 1.0f;
             projection.M32 = -q * NearClipPlane;
 
             return (projection);

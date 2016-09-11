@@ -19,51 +19,48 @@
         public float M32;
         public float M33;
 
-        public static readonly Matrix4x4 Identity = new Matrix4x4() { M00 = 1, M11 = 1, M22 = 1, M33 = 1 };
+        // Game Engine Architecture - page 184
+        public static readonly Matrix4x4 Identity = new Matrix4x4() { M00 = 1.0f, M11 = 1.0f, M22 = 1.0f, M33 = 1.0f };
 
         public Vector3 MultiplyPoint(Vector3 point)
         {
+            // Game Engine Architecture - page 187
+
             Vector4 transformationVector = new Vector4();
 
             transformationVector.X = (point.X * M00) + (point.Y * M10) + (point.Z * M20) + M30;
             transformationVector.Y = (point.X * M01) + (point.Y * M11) + (point.Z * M21) + M31;
             transformationVector.Z = (point.X * M02) + (point.Y * M12) + (point.Z * M22) + M32;
-            transformationVector.W = 1f / ((point.X * M03) + (point.Y * M13) + (point.Z * M23) + M33);
+            transformationVector.W = 1.0f / ((point.X * M03) + (point.Y * M13) + (point.Z * M23) + M33);
 
             return (new Vector3(transformationVector.X * transformationVector.W, transformationVector.Y * transformationVector.W, transformationVector.Z * transformationVector.W));
         }
 
         public static Matrix4x4 CreateRotation(float yaw, float pitch, float roll)
         {
-            Quaternion rotation = Quaternion.Euler(yaw, pitch, roll);
+            // Game Engine Architecture - page 205
 
-            float xx = rotation.X * rotation.X;
-            float yy = rotation.Y * rotation.Y;
-            float zz = rotation.Z * rotation.Z;
-            float xy = rotation.X * rotation.Y;
-            float zw = rotation.Z * rotation.W;
-            float zx = rotation.Z * rotation.X;
-            float yw = rotation.Y * rotation.W;
-            float yz = rotation.Y * rotation.Z;
-            float xw = rotation.X * rotation.W;
+            Quaternion rotation = Quaternion.Euler(yaw, pitch, roll);
 
             Matrix4x4 rotationMatrix = Matrix4x4.Identity;
 
-            rotationMatrix.M00 = 1.0f - (2.0f * (yy + zz));
-            rotationMatrix.M01 = 2.0f * (xy + zw);
-            rotationMatrix.M02 = 2.0f * (zx - yw);
-            rotationMatrix.M10 = 2.0f * (xy - zw);
-            rotationMatrix.M11 = 1.0f - (2.0f * (zz + xx));
-            rotationMatrix.M12 = 2.0f * (yz + xw);
-            rotationMatrix.M20 = 2.0f * (zx + yw);
-            rotationMatrix.M21 = 2.0f * (yz - xw);
-            rotationMatrix.M22 = 1.0f - (2.0f * (yy + xx));
+            rotationMatrix.M00 = 1.0f - (2.0f * (rotation.Y * rotation.Y + rotation.Z * rotation.Z));
+            rotationMatrix.M01 = 2.0f * (rotation.X * rotation.Y + rotation.Z * rotation.W);
+            rotationMatrix.M02 = 2.0f * (rotation.X * rotation.Z - rotation.Y * rotation.W);
+            rotationMatrix.M10 = 2.0f * (rotation.X * rotation.Y - rotation.Z * rotation.W);
+            rotationMatrix.M11 = 1.0f - (2.0f * (rotation.X * rotation.X + rotation.Z * rotation.Z));
+            rotationMatrix.M12 = 2.0f * (rotation.Y * rotation.Z + rotation.X * rotation.W);
+            rotationMatrix.M20 = 2.0f * (rotation.X * rotation.Z + rotation.Y * rotation.W);
+            rotationMatrix.M21 = 2.0f * (rotation.Y * rotation.Z - rotation.X * rotation.W);
+            rotationMatrix.M22 = 1.0f - (2.0f * (rotation.X * rotation.X + rotation.Y * rotation.Y));
 
             return (rotationMatrix);
         }
 
         public static Matrix4x4 CreateTranslation(Vector3 position)
         {
+            // Game Engine Architecture - page 186
+
             Matrix4x4 translation = Matrix4x4.Identity;
 
             translation.M30 = position.X;
@@ -75,6 +72,8 @@
 
         public static Matrix4x4 operator *(Matrix4x4 left, Matrix4x4 right)
         {
+            // Game Engine Architecture - page 182
+
             Matrix4x4 multiplied = new Matrix4x4();
 
             multiplied.M00 = (left.M00 * right.M00) + (left.M01 * right.M10) + (left.M02 * right.M20) + (left.M03 * right.M30);

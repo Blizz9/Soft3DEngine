@@ -19,9 +19,9 @@ namespace Soft3DEngine
 
         public static Quaternion Euler(float yaw, float pitch, float roll)
         {
-            float halfRoll = roll * .5f;
-            float halfPitch = pitch * .5f;
-            float halfYaw = yaw * .5f;
+            float halfRoll = roll * 0.5f;
+            float halfPitch = pitch * 0.5f;
+            float halfYaw = yaw * 0.5f;
 
             float sinRoll = (float)Math.Sin(halfRoll);
             float cosRoll = (float)Math.Cos(halfRoll);

@@ -43,7 +43,7 @@ namespace Soft3DEngine
                 Matrix4x4 worldMatrix = Matrix4x4.CreateRotation(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix4x4.CreateTranslation(mesh.Position);
                 Matrix4x4 transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                int faceIndex = 0;
+                int index = 0;
                 foreach (Face face in mesh.Faces)
                 {
                     Vector3 vertexA = mesh.Vertices[face.A];
@@ -54,10 +54,10 @@ namespace Soft3DEngine
                     Vector3 pointB = project(vertexB, transformationMatrix);
                     Vector3 pointC = project(vertexC, transformationMatrix);
 
-                    byte color = (byte)((0.25f + (faceIndex % mesh.Faces.Length) * 0.75f / mesh.Faces.Length) * 255);
-                    DrawTriangle(pointA, pointB, pointC, Color.FromArgb(255, color, color, color));
+                    byte color = (byte)((0.25f + (index % mesh.Faces.Length) * 0.75f / mesh.Faces.Length) * 255);
+                    drawTriangle(pointA, pointB, pointC, Color.FromArgb(255, color, color, color));
 
-                    faceIndex++;
+                    index++;
                 }
 
                 //foreach (Face face in mesh.Faces)
@@ -66,9 +66,9 @@ namespace Soft3DEngine
                 //    Vector3 vertexB = mesh.Vertices[face.B];
                 //    Vector3 vertexC = mesh.Vertices[face.C];
 
-                //    Vector2 pointA = project2D(vertexA, transformationMatrix);
-                //    Vector2 pointB = project2D(vertexB, transformationMatrix);
-                //    Vector2 pointC = project2D(vertexC, transformationMatrix);
+                //    Vector3 pointA = project(vertexA, transformationMatrix);
+                //    Vector3 pointB = project(vertexB, transformationMatrix);
+                //    Vector3 pointC = project(vertexC, transformationMatrix);
 
                 //    drawLine(pointA, pointB);
                 //    drawLine(pointB, pointC);
@@ -106,7 +106,7 @@ namespace Soft3DEngine
                 putPixel((int)point.X, (int)point.Y, point.Z, color);
         }
 
-        public void drawLine(Vector2 point0, Vector2 point1)
+        public void drawLine(Vector3 point0, Vector3 point1)
         {
             // Bresenham's line algorithm
 
@@ -144,46 +144,21 @@ namespace Soft3DEngine
             }
         }
 
-        private Vector2 project2D(Vector3 pointCoordinates, Matrix4x4 transformationMatrix)
-        {
-            Vector3 point = transformationMatrix.MultiplyPoint(pointCoordinates);
-
-            // offset the point from center to top-left of screen
-            float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2f;
-            float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2f;
-
-            return (new Vector2(offsetPointX, offsetPointY));
-        }
-
         private Vector3 project(Vector3 pointCoordinates, Matrix4x4 transformationMatrix)
         {
             Vector3 point = transformationMatrix.MultiplyPoint(pointCoordinates);
 
             // offset the point from center to top-left of screen
-            float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2f;
-            float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2f;
+            float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2.0f;
+            float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2.0f;
 
             return (new Vector3(offsetPointX, offsetPointY, point.Z));
-        }
-
-        // Clamping values to keep them between 0 and 1
-        float Clamp(float value, float min = 0, float max = 1)
-        {
-            return Math.Max(min, Math.Min(value, max));
-        }
-
-        // Interpolating the value between 2 vertices 
-        // min is the starting point, max the ending point
-        // and gradient the % between the 2 points
-        float Interpolate(float min, float max, float gradient)
-        {
-            return min + (max - min) * Clamp(gradient);
         }
 
         // drawing line between 2 points from left to right
         // papb -> pcpd
         // pa, pb, pc, pd must then be sorted before
-        void ProcessScanLine(int y, Vector3 pa, Vector3 pb, Vector3 pc, Vector3 pd, Color color)
+        private void processScanLine(int y, Vector3 pa, Vector3 pb, Vector3 pc, Vector3 pd, Color color)
         {
             // Thanks to current Y, we can compute the gradient to compute others values like
             // the starting X (sx) and ending X (ex) to draw between
@@ -191,24 +166,24 @@ namespace Soft3DEngine
             var gradient1 = pa.Y != pb.Y ? (y - pa.Y) / (pb.Y - pa.Y) : 1;
             var gradient2 = pc.Y != pd.Y ? (y - pc.Y) / (pd.Y - pc.Y) : 1;
 
-            int sx = (int)Interpolate(pa.X, pb.X, gradient1);
-            int ex = (int)Interpolate(pc.X, pd.X, gradient2);
+            int sx = (int)Mathf.Lerp(pa.X, pb.X, gradient1);
+            int ex = (int)Mathf.Lerp(pc.X, pd.X, gradient2);
 
             // starting Z & ending Z
-            float z1 = Interpolate(pa.Z, pb.Z, gradient1);
-            float z2 = Interpolate(pc.Z, pd.Z, gradient2);
+            float z1 = Mathf.Lerp(pa.Z, pb.Z, gradient1);
+            float z2 = Mathf.Lerp(pc.Z, pd.Z, gradient2);
 
             // drawing a line from left (sx) to right (ex) 
             for (var x = sx; x < ex; x++)
             {
                 float gradient = (x - sx) / (float)(ex - sx);
 
-                var z = Interpolate(z1, z2, gradient);
+                var z = Mathf.Lerp(z1, z2, gradient);
                 drawPoint(new Vector3(x, y, z), color);
             }
         }
 
-        public void DrawTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Color color)
+        private void drawTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Color color)
         {
             // Sorting the points in order to always have this order on screen p1, p2 & p3
             // with p1 always up (thus having the Y the lowest possible to be near the top screen)
@@ -266,11 +241,11 @@ namespace Soft3DEngine
                 {
                     if (y < p2.Y)
                     {
-                        ProcessScanLine(y, p1, p3, p1, p2, color);
+                        processScanLine(y, p1, p3, p1, p2, color);
                     }
                     else
                     {
-                        ProcessScanLine(y, p1, p3, p2, p3, color);
+                        processScanLine(y, p1, p3, p2, p3, color);
                     }
                 }
             }
@@ -291,11 +266,11 @@ namespace Soft3DEngine
                 {
                     if (y < p2.Y)
                     {
-                        ProcessScanLine(y, p1, p2, p1, p3, color);
+                        processScanLine(y, p1, p2, p1, p3, color);
                     }
                     else
                     {
-                        ProcessScanLine(y, p2, p3, p1, p3, color);
+                        processScanLine(y, p2, p3, p1, p3, color);
                     }
                 }
             }

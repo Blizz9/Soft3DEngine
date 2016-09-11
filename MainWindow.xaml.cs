@@ -30,19 +30,21 @@ namespace Soft3DEngine
             _device = new Device(screenBuffer);
 
             _camera = new Camera();
-            _camera.FieldOfView = .78f;
+            _camera.FieldOfView = 0.78f;
             _camera.Aspect = (float)screenBuffer.PixelWidth / screenBuffer.PixelHeight;
-            _camera.NearClipPlane = .01f;
-            _camera.FarClipPlane = 1;
+            _camera.NearClipPlane = 0.01f;
+            _camera.FarClipPlane = 1.0f;
 
             //_meshes = loadModelJSON("Suzanne.model.json");
             _meshes = loadModelJSON("Domino.model.json");
-            _camera.Position = new Vector3(0, 0, 10);
+            //_meshes = loadModelJSON("Cube.model.json");
+            //_meshes = loadModelJSON("Plane.model.json");
+            _camera.Position = new Vector3(0.0f, 0.0f, 10.0f);
             _camera.Target = Vector3.Zero;
 
             //_meshes = loadModelJSON("Mario.model.json");
-            //_camera.Position = new Vector3(0, 1.8f, 10);
-            //_camera.Target = new Vector3(0, 1.8f, 0);
+            //_camera.Position = new Vector3(0.0f, 1.8f, 10.0f);
+            //_camera.Target = new Vector3(0.0f, 1.8f, 0.0f);
 
             CompositionTarget.Rendering += compositionTargetRendering;
         }
@@ -52,7 +54,7 @@ namespace Soft3DEngine
             _device.Clear(Colors.Black);
 
             foreach (Mesh mesh in _meshes)
-                mesh.Rotation = new Vector3(mesh.Rotation.X + .01f, mesh.Rotation.Y + .01f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y + 0.05f, mesh.Rotation.Z);
 
             _device.Render(_camera, _meshes);
             _device.Present();
