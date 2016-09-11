@@ -21,6 +21,58 @@
 
         public static readonly Matrix4x4 Identity = new Matrix4x4() { M00 = 1, M11 = 1, M22 = 1, M33 = 1 };
 
+        public Vector3 MultiplyPoint(Vector3 point)
+        {
+            Vector4 transformationVector = new Vector4();
+
+            transformationVector.X = (point.X * M00) + (point.Y * M10) + (point.Z * M20) + M30;
+            transformationVector.Y = (point.X * M01) + (point.Y * M11) + (point.Z * M21) + M31;
+            transformationVector.Z = (point.X * M02) + (point.Y * M12) + (point.Z * M22) + M32;
+            transformationVector.W = 1f / ((point.X * M03) + (point.Y * M13) + (point.Z * M23) + M33);
+
+            return (new Vector3(transformationVector.X * transformationVector.W, transformationVector.Y * transformationVector.W, transformationVector.Z * transformationVector.W));
+        }
+
+        public static Matrix4x4 CreateRotation(float yaw, float pitch, float roll)
+        {
+            Quaternion rotation = Quaternion.Euler(yaw, pitch, roll);
+
+            float xx = rotation.X * rotation.X;
+            float yy = rotation.Y * rotation.Y;
+            float zz = rotation.Z * rotation.Z;
+            float xy = rotation.X * rotation.Y;
+            float zw = rotation.Z * rotation.W;
+            float zx = rotation.Z * rotation.X;
+            float yw = rotation.Y * rotation.W;
+            float yz = rotation.Y * rotation.Z;
+            float xw = rotation.X * rotation.W;
+
+            Matrix4x4 rotationMatrix = Matrix4x4.Identity;
+
+            rotationMatrix.M00 = 1.0f - (2.0f * (yy + zz));
+            rotationMatrix.M01 = 2.0f * (xy + zw);
+            rotationMatrix.M02 = 2.0f * (zx - yw);
+            rotationMatrix.M10 = 2.0f * (xy - zw);
+            rotationMatrix.M11 = 1.0f - (2.0f * (zz + xx));
+            rotationMatrix.M12 = 2.0f * (yz + xw);
+            rotationMatrix.M20 = 2.0f * (zx + yw);
+            rotationMatrix.M21 = 2.0f * (yz - xw);
+            rotationMatrix.M22 = 1.0f - (2.0f * (yy + xx));
+
+            return (rotationMatrix);
+        }
+
+        public static Matrix4x4 CreateTranslation(Vector3 position)
+        {
+            Matrix4x4 translation = Matrix4x4.Identity;
+
+            translation.M30 = position.X;
+            translation.M31 = position.Y;
+            translation.M32 = position.Z;
+
+            return (translation);
+        }
+
         public static Matrix4x4 operator *(Matrix4x4 left, Matrix4x4 right)
         {
             Matrix4x4 multiplied = new Matrix4x4();

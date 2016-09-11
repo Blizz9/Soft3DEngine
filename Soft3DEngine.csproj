@@ -38,10 +38,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.4.2.0, Culture=neutral, PublicKeyToken=627a3d6d1956f55a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\SharpDX.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -66,10 +62,10 @@
     <Compile Include="Device.cs" />
     <Compile Include="Matrix4x4.cs" />
     <Compile Include="Mesh.cs" />
-    <Compile Include="UnityQuaternion.cs" />
-    <Compile Include="UnityVector2.cs" />
-    <Compile Include="UnityVector3.cs" />
-    <Compile Include="UnityVector4.cs" />
+    <Compile Include="Quaternion.cs" />
+    <Compile Include="Vector2.cs" />
+    <Compile Include="Vector3.cs" />
+    <Compile Include="Vector4.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -122,10 +118,6 @@
   <ItemGroup>
     <Content Include="Newtonsoft.Json.dll" />
     <Resource Include="Newtonsoft.Json.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="SharpDX.dll" />
-    <Resource Include="SharpDX.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

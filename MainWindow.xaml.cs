@@ -30,11 +30,15 @@ namespace Soft3DEngine
             _device = new Device(screenBuffer);
 
             _camera = new Camera();
+            _camera.FieldOfView = .78f;
+            _camera.Aspect = (float)screenBuffer.PixelWidth / screenBuffer.PixelHeight;
+            _camera.NearClipPlane = .01f;
+            _camera.FarClipPlane = 1;
 
             _meshes = loadModelJSON("Suzanne.model.json");
             //_meshes = loadModelJSON("Domino.model.json");
-            _camera.Position = new UnityVector3(0, 0, 10);
-            _camera.Target = UnityVector3.Zero;
+            _camera.Position = new Vector3(0, 0, 10);
+            _camera.Target = Vector3.Zero;
 
             //_meshes = loadModelJSON("Mario.model.json");
             //_camera.Position = new UnityVector3(0, 1.8f, 10);
@@ -48,7 +52,7 @@ namespace Soft3DEngine
             _device.Clear(Colors.Black);
 
             foreach (Mesh mesh in _meshes)
-                mesh.Rotation = new UnityVector3(mesh.Rotation.X, mesh.Rotation.Y + .02f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y + .02f, mesh.Rotation.Z);
 
             _device.Render(_camera, _meshes);
             _device.Present();
@@ -92,7 +96,7 @@ namespace Soft3DEngine
                     float y = vertices[vertexIndex * vertexStep + 1];
                     float z = vertices[vertexIndex * vertexStep + 2];
 
-                    mesh.Vertices[vertexIndex] = new UnityVector3(x, y, z);
+                    mesh.Vertices[vertexIndex] = new Vector3(x, y, z);
                 }
 
                 for (int faceIndex = 0; faceIndex < faceCount; faceIndex++)
@@ -105,7 +109,7 @@ namespace Soft3DEngine
                 }
 
                 float[] positionCoordinates = ((JArray)model.meshes[index].position).Select(pc => (float)pc).ToArray();
-                mesh.Position = new UnityVector3(positionCoordinates[0], positionCoordinates[1], positionCoordinates[2]);
+                mesh.Position = new Vector3(positionCoordinates[0], positionCoordinates[1], positionCoordinates[2]);
                 
                 meshes.Add(mesh);
             }

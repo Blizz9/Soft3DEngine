@@ -1,13 +1,13 @@
 ﻿namespace Soft3DEngine
 {
-    public struct UnityQuaternion
+    public struct Vector4
     {
         public float X;
         public float Y;
         public float Z;
         public float W;
 
-        public UnityQuaternion(float x, float y, float z, float w)
+        public Vector4(float x, float y, float z, float w)
         {
             X = x;
             Y = y;

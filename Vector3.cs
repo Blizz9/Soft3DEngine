@@ -2,7 +2,7 @@
 
 namespace Soft3DEngine
 {
-    public struct UnityVector3
+    public struct Vector3
     {
         private const float ZERO_TOLERANCE = 1e-6f;
 
@@ -10,16 +10,16 @@ namespace Soft3DEngine
         public float Y;
         public float Z;
 
-        public UnityVector3(float x, float y, float z)
+        public Vector3(float x, float y, float z)
         {
             X = x;
             Y = y;
             Z = z;
         }
 
-        public static readonly UnityVector3 Zero = new UnityVector3();
+        public static readonly Vector3 Zero = new Vector3();
 
-        public static readonly UnityVector3 Up = new UnityVector3(0, 1, 0);
+        public static readonly Vector3 Up = new Vector3(0, 1, 0);
 
         private bool isZero(float value)
         {
@@ -45,19 +45,19 @@ namespace Soft3DEngine
             }
         }
 
-        public static UnityVector3 Cross(UnityVector3 left, UnityVector3 right)
+        public static Vector3 Cross(Vector3 left, Vector3 right)
         {
-            return (new UnityVector3((left.Y * right.Z) - (left.Z * right.Y), (left.Z * right.X) - (left.X * right.Z), (left.X * right.Y) - (left.Y * right.X)));
+            return (new Vector3((left.Y * right.Z) - (left.Z * right.Y), (left.Z * right.X) - (left.X * right.Z), (left.X * right.Y) - (left.Y * right.X)));
         }
 
-        public static float Dot(UnityVector3 left, UnityVector3 right)
+        public static float Dot(Vector3 left, Vector3 right)
         {
             return ((left.X * right.X) + (left.Y * right.Y) + (left.Z * right.Z));
         }
 
-        public static UnityVector3 operator -(UnityVector3 left, UnityVector3 right)
+        public static Vector3 operator -(Vector3 left, Vector3 right)
         {
-            return (new UnityVector3(left.X - right.X, left.Y - right.Y, left.Z - right.Z));
+            return (new Vector3(left.X - right.X, left.Y - right.Y, left.Z - right.Z));
         }
     }
 }
