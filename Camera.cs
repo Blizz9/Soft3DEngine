@@ -14,15 +14,15 @@ namespace Soft3DEngine
         public Matrix4x4 CreateProjectionMatrix()
         {
             float yScale = (float)(1f / Math.Tan(FieldOfView * .5f));
-            float q = FarClipPlane / (NearClipPlane - FarClipPlane);
+            float q = FarClipPlane / (FarClipPlane - NearClipPlane);
 
             Matrix4x4 projection = new Matrix4x4();
 
             projection.M00 = yScale / Aspect;
             projection.M11 = yScale;
             projection.M22 = q;
-            projection.M23 = -1;
-            projection.M32 = q * NearClipPlane;
+            projection.M23 = 1;
+            projection.M32 = -q * NearClipPlane;
 
             return (projection);
         }
