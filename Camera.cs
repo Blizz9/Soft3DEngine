@@ -29,6 +29,8 @@ namespace Soft3DEngine
 
         public Matrix4x4 CreateWorldToCameraMatrix()
         {
+            // Game Engine Architecture - page 478
+
             Vector3 zAxis = Target - Position;
             zAxis.Normalize();
 

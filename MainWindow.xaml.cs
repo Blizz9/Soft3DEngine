@@ -35,8 +35,8 @@ namespace Soft3DEngine
             _camera.NearClipPlane = 0.01f;
             _camera.FarClipPlane = 1.0f;
 
-            //_meshes = loadModelJSON("Suzanne.model.json");
-            _meshes = loadModelJSON("Domino.model.json");
+            _meshes = loadModelJSON("Suzanne.model.json");
+            //_meshes = loadModelJSON("Domino.model.json");
             //_meshes = loadModelJSON("Cube.model.json");
             //_meshes = loadModelJSON("Plane.model.json");
             _camera.Position = new Vector3(0.0f, 0.0f, 10.0f);
@@ -54,7 +54,7 @@ namespace Soft3DEngine
             _device.Clear(Colors.Black);
 
             foreach (Mesh mesh in _meshes)
-                mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y + 0.05f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X + 0.00f, mesh.Rotation.Y + 0.03f, mesh.Rotation.Z);
 
             _device.Render(_camera, _meshes);
             _device.Present();

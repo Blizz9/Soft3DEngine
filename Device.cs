@@ -43,23 +43,7 @@ namespace Soft3DEngine
                 Matrix4x4 worldMatrix = Matrix4x4.CreateRotation(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix4x4.CreateTranslation(mesh.Position);
                 Matrix4x4 transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                int index = 0;
-                foreach (Face face in mesh.Faces)
-                {
-                    Vector3 vertexA = mesh.Vertices[face.A];
-                    Vector3 vertexB = mesh.Vertices[face.B];
-                    Vector3 vertexC = mesh.Vertices[face.C];
-
-                    Vector3 pointA = project(vertexA, transformationMatrix);
-                    Vector3 pointB = project(vertexB, transformationMatrix);
-                    Vector3 pointC = project(vertexC, transformationMatrix);
-
-                    byte color = (byte)((0.25f + (index % mesh.Faces.Length) * 0.75f / mesh.Faces.Length) * 255);
-                    drawTriangle(pointA, pointB, pointC, Color.FromArgb(255, color, color, color));
-
-                    index++;
-                }
-
+                //int index = 0;
                 //foreach (Face face in mesh.Faces)
                 //{
                 //    Vector3 vertexA = mesh.Vertices[face.A];
@@ -70,10 +54,26 @@ namespace Soft3DEngine
                 //    Vector3 pointB = project(vertexB, transformationMatrix);
                 //    Vector3 pointC = project(vertexC, transformationMatrix);
 
-                //    drawLine(pointA, pointB);
-                //    drawLine(pointB, pointC);
-                //    drawLine(pointC, pointA);
+                //    byte color = (byte)((0.25f + (index % mesh.Faces.Length) * 0.75f / mesh.Faces.Length) * 255);
+                //    drawTriangle(pointA, pointB, pointC, Color.FromArgb(255, color, color, color));
+
+                //    index++;
                 //}
+
+                foreach (Face face in mesh.Faces)
+                {
+                    Vector3 vertexA = mesh.Vertices[face.A];
+                    Vector3 vertexB = mesh.Vertices[face.B];
+                    Vector3 vertexC = mesh.Vertices[face.C];
+
+                    Vector3 pointA = project(vertexA, transformationMatrix);
+                    Vector3 pointB = project(vertexB, transformationMatrix);
+                    Vector3 pointC = project(vertexC, transformationMatrix);
+
+                    drawLine(pointA, pointB);
+                    drawLine(pointB, pointC);
+                    drawLine(pointC, pointA);
+                }
             }
         }
 
