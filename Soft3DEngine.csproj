@@ -64,9 +64,11 @@
     <Compile Include="Matrix4x4.cs" />
     <Compile Include="Mesh.cs" />
     <Compile Include="Quaternion.cs" />
+    <Compile Include="ScanLineData.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
     <Compile Include="Vector4.cs" />
+    <Compile Include="Vertex.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

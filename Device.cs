@@ -43,37 +43,36 @@ namespace Soft3DEngine
                 Matrix4x4 worldMatrix = Matrix4x4.CreateRotation(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix4x4.CreateTranslation(mesh.Position);
                 Matrix4x4 transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                //int index = 0;
-                //foreach (Face face in mesh.Faces)
-                //{
-                //    Vector3 vertexA = mesh.Vertices[face.A];
-                //    Vector3 vertexB = mesh.Vertices[face.B];
-                //    Vector3 vertexC = mesh.Vertices[face.C];
-
-                //    Vector3 pointA = project(vertexA, transformationMatrix);
-                //    Vector3 pointB = project(vertexB, transformationMatrix);
-                //    Vector3 pointC = project(vertexC, transformationMatrix);
-
-                //    byte color = (byte)((0.25f + (index % mesh.Faces.Length) * 0.75f / mesh.Faces.Length) * 255);
-                //    drawTriangle(pointA, pointB, pointC, Color.FromArgb(255, color, color, color));
-
-                //    index++;
-                //}
-
+                int index = 0;
                 foreach (Face face in mesh.Faces)
                 {
-                    Vector3 vertexA = mesh.Vertices[face.A];
-                    Vector3 vertexB = mesh.Vertices[face.B];
-                    Vector3 vertexC = mesh.Vertices[face.C];
+                    Vertex vertexA = mesh.Vertices[face.A];
+                    Vertex vertexB = mesh.Vertices[face.B];
+                    Vertex vertexC = mesh.Vertices[face.C];
 
-                    Vector3 pointA = project(vertexA, transformationMatrix);
-                    Vector3 pointB = project(vertexB, transformationMatrix);
-                    Vector3 pointC = project(vertexC, transformationMatrix);
+                    Vertex pointA = project(vertexA, worldMatrix, transformationMatrix);
+                    Vertex pointB = project(vertexB, worldMatrix, transformationMatrix);
+                    Vertex pointC = project(vertexC, worldMatrix, transformationMatrix);
 
-                    drawLine(pointA, pointB);
-                    drawLine(pointB, pointC);
-                    drawLine(pointC, pointA);
+                    drawTriangle(pointA, pointB, pointC, Colors.Black);
+
+                    index++;
                 }
+
+                //foreach (Face face in mesh.Faces)
+                //{
+                //    Vertex vertexA = mesh.Vertices[face.A];
+                //    Vertex vertexB = mesh.Vertices[face.B];
+                //    Vertex vertexC = mesh.Vertices[face.C];
+
+                //    Vertex pointA = project(vertexA, worldMatrix, transformationMatrix);
+                //    Vertex pointB = project(vertexB, worldMatrix, transformationMatrix);
+                //    Vertex pointC = project(vertexC, worldMatrix, transformationMatrix);
+
+                //    drawLine(pointA.Coordinates, pointB.Coordinates);
+                //    drawLine(pointB.Coordinates, pointC.Coordinates);
+                //    drawLine(pointC.Coordinates, pointA.Coordinates);
+                //}
             }
         }
 
@@ -144,27 +143,37 @@ namespace Soft3DEngine
             }
         }
 
-        private Vector3 project(Vector3 pointCoordinates, Matrix4x4 transformationMatrix)
+        private Vertex project(Vertex vertex, Matrix4x4 worldMatrix, Matrix4x4 transformationMatrix)
         {
-            Vector3 point = transformationMatrix.MultiplyPoint(pointCoordinates);
+            Vector3 point = transformationMatrix.MultiplyPoint(vertex.Coordinates);
 
             // offset the point from center to top-left of screen
             float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2.0f;
             float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2.0f;
 
-            return (new Vector3(offsetPointX, offsetPointY, point.Z));
+            Vertex projectedVertex = new Vertex();
+            projectedVertex.Coordinates = new Vector3(offsetPointX, offsetPointY, point.Z);
+            projectedVertex.Normal = worldMatrix.MultiplyPoint(vertex.Normal);
+            projectedVertex.WorldCoordinates = worldMatrix.MultiplyPoint(vertex.Coordinates);
+
+            return (projectedVertex);
         }
 
         // drawing line between 2 points from left to right
         // papb -> pcpd
         // pa, pb, pc, pd must then be sorted before
-        private void processScanLine(int y, Vector3 pa, Vector3 pb, Vector3 pc, Vector3 pd, Color color)
+        private void processScanLine(ScanLineData data, Vertex va, Vertex vb, Vertex vc, Vertex vd, Color color)
         {
+            Vector3 pa = va.Coordinates;
+            Vector3 pb = vb.Coordinates;
+            Vector3 pc = vc.Coordinates;
+            Vector3 pd = vd.Coordinates;
+
             // Thanks to current Y, we can compute the gradient to compute others values like
             // the starting X (sx) and ending X (ex) to draw between
             // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-            var gradient1 = pa.Y != pb.Y ? (y - pa.Y) / (pb.Y - pa.Y) : 1;
-            var gradient2 = pc.Y != pd.Y ? (y - pc.Y) / (pd.Y - pc.Y) : 1;
+            var gradient1 = pa.Y != pb.Y ? (data.currentY - pa.Y) / (pb.Y - pa.Y) : 1;
+            var gradient2 = pc.Y != pd.Y ? (data.currentY - pc.Y) / (pd.Y - pc.Y) : 1;
 
             int sx = (int)Mathf.Lerp(pa.X, pb.X, gradient1);
             int ex = (int)Mathf.Lerp(pc.X, pd.X, gradient2);
@@ -179,41 +188,72 @@ namespace Soft3DEngine
                 float gradient = (x - sx) / (float)(ex - sx);
 
                 var z = Mathf.Lerp(z1, z2, gradient);
-                drawPoint(new Vector3(x, y, z), color);
+                var ndotl = data.ndotla;
+                // changing the color value using the cosine of the angle
+                // between the light vector and the normal vector
+                drawPoint(new Vector3(x, data.currentY, z), color * ndotl);
             }
         }
 
-        private void drawTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Color color)
+        // Compute the cosine of the angle between the light vector and the normal vector
+        // Returns a value between 0 and 1
+        private float computeNDotL(Vector3 vertex, Vector3 normal, Vector3 lightPosition)
+        {
+            var lightDirection = lightPosition - vertex;
+
+            normal.Normalize();
+            lightDirection.Normalize();
+
+            return Math.Max(0, Vector3.Dot(normal, lightDirection));
+        }
+
+        private void drawTriangle(Vertex v1, Vertex v2, Vertex v3, Color color)
         {
             // Sorting the points in order to always have this order on screen p1, p2 & p3
             // with p1 always up (thus having the Y the lowest possible to be near the top screen)
             // then p2 between p1 & p3
-            if (p1.Y > p2.Y)
+            if (v1.Coordinates.Y > v2.Coordinates.Y)
             {
-                var temp = p2;
-                p2 = p1;
-                p1 = temp;
+                var temp = v2;
+                v2 = v1;
+                v1 = temp;
             }
 
-            if (p2.Y > p3.Y)
+            if (v2.Coordinates.Y > v3.Coordinates.Y)
             {
-                var temp = p2;
-                p2 = p3;
-                p3 = temp;
+                var temp = v2;
+                v2 = v3;
+                v3 = temp;
             }
 
-            if (p1.Y > p2.Y)
+            if (v1.Coordinates.Y > v2.Coordinates.Y)
             {
-                var temp = p2;
-                p2 = p1;
-                p1 = temp;
+                var temp = v2;
+                v2 = v1;
+                v1 = temp;
             }
 
-            // inverse slopes
+            Vector3 p1 = v1.Coordinates;
+            Vector3 p2 = v2.Coordinates;
+            Vector3 p3 = v3.Coordinates;
+
+            // normal face's vector is the average normal between each vertex's normal
+            // computing also the center point of the face
+            Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
+            Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
+            // Light position 
+            Vector3 lightPos = new Vector3(0, -10, 10);
+            // computing the cos of the angle between the light vector and the normal vector
+            // it will return a value between 0 and 1 that will be used as the intensity of the color
+            float ndotl = computeNDotL(centerPoint, vnFace, lightPos);
+
+            var data = new ScanLineData { ndotla = ndotl };
+
+            // computing lines' directions
             float dP1P2, dP1P3;
 
             // http://en.wikipedia.org/wiki/Slope
-            // Computing inverse slopes
+            // Computing slopes
             if (p2.Y - p1.Y > 0)
                 dP1P2 = (p2.X - p1.X) / (p2.Y - p1.Y);
             else
@@ -239,13 +279,15 @@ namespace Soft3DEngine
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
                 {
+                    data.currentY = y;
+
                     if (y < p2.Y)
                     {
-                        processScanLine(y, p1, p3, p1, p2, color);
+                        processScanLine(data, v1, v3, v1, v2, color);
                     }
                     else
                     {
-                        processScanLine(y, p1, p3, p2, p3, color);
+                        processScanLine(data, v1, v3, v2, v3, color);
                     }
                 }
             }
@@ -264,13 +306,15 @@ namespace Soft3DEngine
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
                 {
+                    data.currentY = y;
+
                     if (y < p2.Y)
                     {
-                        processScanLine(y, p1, p2, p1, p3, color);
+                        processScanLine(data, v1, v2, v1, v3, color);
                     }
                     else
                     {
-                        processScanLine(y, p2, p3, p1, p3, color);
+                        processScanLine(data, v2, v3, v1, v3, color);
                     }
                 }
             }

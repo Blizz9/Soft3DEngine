@@ -35,6 +35,7 @@ namespace Soft3DEngine
             _camera.NearClipPlane = 0.01f;
             _camera.FarClipPlane = 1.0f;
 
+            //_meshes = loadModelJSON("monkey.babylon");
             _meshes = loadModelJSON("Suzanne.model.json");
             //_meshes = loadModelJSON("Domino.model.json");
             //_meshes = loadModelJSON("Cube.model.json");
@@ -98,7 +99,11 @@ namespace Soft3DEngine
                     float y = vertices[vertexIndex * vertexStep + 1];
                     float z = vertices[vertexIndex * vertexStep + 2];
 
-                    mesh.Vertices[vertexIndex] = new Vector3(x, y, z);
+                    float xNormal = vertices[vertexIndex * vertexStep + 3];
+                    float yNormal = vertices[vertexIndex * vertexStep + 4];
+                    float zNormal = vertices[vertexIndex * vertexStep + 5];
+
+                    mesh.Vertices[vertexIndex] = new Vertex { Coordinates = new Vector3(x, y, z), Normal = new Vector3(xNormal, yNormal, zNormal) };
                 }
 
                 for (int faceIndex = 0; faceIndex < faceCount; faceIndex++)

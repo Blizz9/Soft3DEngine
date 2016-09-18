@@ -53,10 +53,21 @@ namespace Soft3DEngine
             return ((left.X * right.X) + (left.Y * right.Y) + (left.Z * right.Z));
         }
 
+        public static Vector3 operator +(Vector3 left, Vector3 right)
+        {
+            // Game Engine Architecture - page 170
+            return (new Vector3(left.X + right.X, left.Y + right.Y, left.Z + right.Z));
+        }
+
         public static Vector3 operator -(Vector3 left, Vector3 right)
         {
             // Game Engine Architecture - page 171
             return (new Vector3(left.X - right.X, left.Y - right.Y, left.Z - right.Z));
+        }
+
+        public static Vector3 operator /(Vector3 value, float scale)
+        {
+            return (new Vector3(value.X / scale, value.Y / scale, value.Z / scale));
         }
     }
 }
