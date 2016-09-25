@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -70,10 +71,26 @@ namespace Soft3DEngine
                     }
                     else
                     {
-                        drawTriangle(pointA, pointB, pointC, Colors.Black);
+                        drawTriangle(pointA, pointB, pointC, Colors.Black, RenderMode);
                     }
                 }
             }
+        }
+
+        private Vertex project(Vertex vertex, Matrix4x4 worldMatrix, Matrix4x4 transformationMatrix)
+        {
+            Vector3 point = transformationMatrix.MultiplyPoint(vertex.Coordinates);
+
+            // offset the point from center to top-left of screen
+            float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2.0f;
+            float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2.0f;
+
+            Vertex projectedVertex = new Vertex();
+            projectedVertex.Coordinates = new Vector3(offsetPointX, offsetPointY, point.Z);
+            projectedVertex.Normal = worldMatrix.MultiplyPoint(vertex.Normal);
+            projectedVertex.WorldCoordinates = worldMatrix.MultiplyPoint(vertex.Coordinates);
+
+            return (projectedVertex);
         }
 
         public void Present()
@@ -143,375 +160,126 @@ namespace Soft3DEngine
             }
         }
 
-        private Vertex project(Vertex vertex, Matrix4x4 worldMatrix, Matrix4x4 transformationMatrix)
+        private void drawTriangle(Vertex vertex1, Vertex vertex2, Vertex vertex3, Color color, RenderMode renderMode)
         {
-            Vector3 point = transformationMatrix.MultiplyPoint(vertex.Coordinates);
+            // sort vertices by Y
+            List<Vertex> vertices = new List<Vertex>() { vertex1, vertex2, vertex3 };
+            IEnumerable<Vertex> sortedVertices = vertices.OrderBy(v => v.Coordinates.Y);
+            vertex1 = sortedVertices.First();
+            vertex2 = sortedVertices.ElementAt(1);
+            vertex3 = sortedVertices.Last();
 
-            // offset the point from center to top-left of screen
-            float offsetPointX = point.X * _renderTarget.PixelWidth + _renderTarget.PixelWidth / 2.0f;
-            float offsetPointY = -point.Y * _renderTarget.PixelHeight + _renderTarget.PixelHeight / 2.0f;
-
-            Vertex projectedVertex = new Vertex();
-            projectedVertex.Coordinates = new Vector3(offsetPointX, offsetPointY, point.Z);
-            projectedVertex.Normal = worldMatrix.MultiplyPoint(vertex.Normal);
-            projectedVertex.WorldCoordinates = worldMatrix.MultiplyPoint(vertex.Coordinates);
-
-            return (projectedVertex);
-        }
-
-        /*
-        // drawing line between 2 points from left to right
-        // papb -> pcpd
-        // pa, pb, pc, pd must then be sorted before
-        private void processScanLine(ScanLineData data, Vertex va, Vertex vb, Vertex vc, Vertex vd, Color color)
-        {
-            Vector3 pa = va.Coordinates;
-            Vector3 pb = vb.Coordinates;
-            Vector3 pc = vc.Coordinates;
-            Vector3 pd = vd.Coordinates;
-
-            // Thanks to current Y, we can compute the gradient to compute others values like
-            // the starting X (sx) and ending X (ex) to draw between
-            // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-            var gradient1 = pa.Y != pb.Y ? (data.currentY - pa.Y) / (pb.Y - pa.Y) : 1;
-            var gradient2 = pc.Y != pd.Y ? (data.currentY - pc.Y) / (pd.Y - pc.Y) : 1;
-
-            int sx = (int)Mathf.Lerp(pa.X, pb.X, gradient1);
-            int ex = (int)Mathf.Lerp(pc.X, pd.X, gradient2);
-
-            // starting Z & ending Z
-            float z1 = Mathf.Lerp(pa.Z, pb.Z, gradient1);
-            float z2 = Mathf.Lerp(pc.Z, pd.Z, gradient2);
-
-            // drawing a line from left (sx) to right (ex) 
-            for (var x = sx; x < ex; x++)
+            float faceReflectionProportion = 0.0f;
+            float vertex1ReflectionProportion = 0;
+            float vertex2ReflectionProportion = 0;
+            float vertex3ReflectionProportion = 0;
+            if (RenderMode == RenderMode.FlatShading)
             {
-                float gradient = (x - sx) / (float)(ex - sx);
-
-                var z = Mathf.Lerp(z1, z2, gradient);
-                var ndotl = data.ndotla;
-                // changing the color value using the cosine of the angle
-                // between the light vector and the normal vector
-                drawPoint(new Vector3(x, data.currentY, z), color * ndotl);
+                Vector3 faceNormal = (vertex1.Normal + vertex2.Normal + vertex3.Normal) / 3.0f;
+                Vector3 faceCentroid = (vertex1.WorldCoordinates + vertex2.WorldCoordinates + vertex3.WorldCoordinates) / 3.0f;
+                faceReflectionProportion = calculateReflectionProportion(faceCentroid, faceNormal);
             }
-        }
-
-        // Compute the cosine of the angle between the light vector and the normal vector
-        // Returns a value between 0 and 1
-        private float computeNDotL(Vector3 vertex, Vector3 normal, Vector3 lightPosition)
-        {
-            var lightDirection = lightPosition - vertex;
-
-            normal.Normalize();
-            lightDirection.Normalize();
-
-            return Math.Max(0, Vector3.Dot(normal, lightDirection));
-        }
-
-        private void drawTriangle(Vertex v1, Vertex v2, Vertex v3, Color color)
-        {
-            // Sorting the points in order to always have this order on screen p1, p2 & p3
-            // with p1 always up (thus having the Y the lowest possible to be near the top screen)
-            // then p2 between p1 & p3
-            if (v1.Coordinates.Y > v2.Coordinates.Y)
-            {
-                var temp = v2;
-                v2 = v1;
-                v1 = temp;
-            }
-
-            if (v2.Coordinates.Y > v3.Coordinates.Y)
-            {
-                var temp = v2;
-                v2 = v3;
-                v3 = temp;
-            }
-
-            if (v1.Coordinates.Y > v2.Coordinates.Y)
-            {
-                var temp = v2;
-                v2 = v1;
-                v1 = temp;
-            }
-
-            Vector3 p1 = v1.Coordinates;
-            Vector3 p2 = v2.Coordinates;
-            Vector3 p3 = v3.Coordinates;
-
-            // normal face's vector is the average normal between each vertex's normal
-            // computing also the center point of the face
-            Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
-            Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
-            // Light position 
-            Vector3 lightPos = new Vector3(0, -10, 10);
-            // computing the cos of the angle between the light vector and the normal vector
-            // it will return a value between 0 and 1 that will be used as the intensity of the color
-            float ndotl = computeNDotL(centerPoint, vnFace, lightPos);
-
-            var data = new ScanLineData { ndotla = ndotl };
-
-            // computing lines' directions
-            float dP1P2, dP1P3;
-
-            // http://en.wikipedia.org/wiki/Slope
-            // Computing slopes
-            if (p2.Y - p1.Y > 0)
-                dP1P2 = (p2.X - p1.X) / (p2.Y - p1.Y);
             else
-                dP1P2 = 0;
-
-            if (p3.Y - p1.Y > 0)
-                dP1P3 = (p3.X - p1.X) / (p3.Y - p1.Y);
-            else
-                dP1P3 = 0;
-
-            // First case where triangles are like that:
-            // P1
-            // -
-            // -- 
-            // - -
-            // -  -
-            // -   - P2
-            // -  -
-            // - -
-            // -
-            // P3
-            if (dP1P2 > dP1P3)
             {
-                for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
-                {
-                    data.currentY = y;
+                vertex1ReflectionProportion = calculateReflectionProportion(vertex1.WorldCoordinates, vertex1.Normal);
+                vertex2ReflectionProportion = calculateReflectionProportion(vertex2.WorldCoordinates, vertex2.Normal);
+                vertex3ReflectionProportion = calculateReflectionProportion(vertex3.WorldCoordinates, vertex3.Normal);
+            }
 
-                    if (y < p2.Y)
-                    {
-                        processScanLine(data, v1, v3, v1, v2, color);
-                    }
+            float vertex1Vertex2Slope;
+            if (vertex2.Coordinates.Y - vertex1.Coordinates.Y > 0)
+                vertex1Vertex2Slope = (vertex2.Coordinates.X - vertex1.Coordinates.X) / (vertex2.Coordinates.Y - vertex1.Coordinates.Y);
+            else
+                vertex1Vertex2Slope = 0;
+
+            float vertex1Vertex3Slope;
+            if (vertex3.Coordinates.Y - vertex1.Coordinates.Y > 0)
+                vertex1Vertex3Slope = (vertex3.Coordinates.X - vertex1.Coordinates.X) / (vertex3.Coordinates.Y - vertex1.Coordinates.Y);
+            else
+                vertex1Vertex3Slope = 0;
+
+            // order the vertices when processing the scanline based on the comparisons of the slopes
+            if (vertex1Vertex2Slope > vertex1Vertex3Slope)
+                for (int y = (int)vertex1.Coordinates.Y; y <= (int)vertex3.Coordinates.Y; y++)
+                    if (y < vertex2.Coordinates.Y)
+                        if (renderMode == RenderMode.FlatShading)
+                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, faceReflectionProportion, color);
+                        else
+                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, vertex1ReflectionProportion, vertex3ReflectionProportion, vertex1ReflectionProportion, vertex2ReflectionProportion, color);
                     else
-                    {
-                        processScanLine(data, v1, v3, v2, v3, color);
-                    }
-                }
-            }
-            // First case where triangles are like that:
-            //       P1
-            //        -
-            //       -- 
-            //      - -
-            //     -  -
-            // P2 -   - 
-            //     -  -
-            //      - -
-            //        -
-            //       P3
+                        if (renderMode == RenderMode.FlatShading)
+                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, faceReflectionProportion, color);
+                        else
+                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, vertex1ReflectionProportion, vertex3ReflectionProportion, vertex2ReflectionProportion, vertex3ReflectionProportion, color);
             else
-            {
-                for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
-                {
-                    data.currentY = y;
-
-                    if (y < p2.Y)
-                    {
-                        processScanLine(data, v1, v2, v1, v3, color);
-                    }
+                for (int y = (int)vertex1.Coordinates.Y; y <= (int)vertex3.Coordinates.Y; y++)
+                    if (y < vertex2.Coordinates.Y)
+                        if (renderMode == RenderMode.FlatShading)
+                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, faceReflectionProportion, color);
+                        else
+                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, vertex1ReflectionProportion, vertex2ReflectionProportion, vertex1ReflectionProportion, vertex3ReflectionProportion, color);
                     else
-                    {
-                        processScanLine(data, v2, v3, v1, v3, color);
-                    }
-                }
-            }
+                        if (renderMode == RenderMode.FlatShading)
+                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, faceReflectionProportion, color);
+                        else
+                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, vertex2ReflectionProportion, vertex3ReflectionProportion, vertex1ReflectionProportion, vertex3ReflectionProportion, color);
         }
-        */
 
-        // drawing line between 2 points from left to right
-        // papb -> pcpd
-        // pa, pb, pc, pd must then be sorted before
-        private void processScanLine(ScanLineData data, Vertex va, Vertex vb, Vertex vc, Vertex vd, Color color)
+        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float? faceReflectionProportion, float? edge1Vertex1ReflectionProportion, float? edge1Vertex2ReflectionProportion, float? edge2Vertex1ReflectionProportion, float? edge2Vertex2ReflectionProportion, Color color)
         {
-            Vector3 pa = va.Coordinates;
-            Vector3 pb = vb.Coordinates;
-            Vector3 pc = vc.Coordinates;
-            Vector3 pd = vd.Coordinates;
+            float edge1Proportion = edge1Vertex1.Coordinates.Y != edge1Vertex2.Coordinates.Y ? (y - edge1Vertex1.Coordinates.Y) / (edge1Vertex2.Coordinates.Y - edge1Vertex1.Coordinates.Y) : 1;
+            float edge2Proportion = edge2Vertex1.Coordinates.Y != edge2Vertex2.Coordinates.Y ? (y - edge2Vertex1.Coordinates.Y) / (edge2Vertex2.Coordinates.Y - edge2Vertex1.Coordinates.Y) : 1;
 
-            // Thanks to current Y, we can compute the gradient to compute others values like
-            // the starting X (sx) and ending X (ex) to draw between
-            // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-            var gradient1 = pa.Y != pb.Y ? (data.currentY - pa.Y) / (pb.Y - pa.Y) : 1;
-            var gradient2 = pc.Y != pd.Y ? (data.currentY - pc.Y) / (pd.Y - pc.Y) : 1;
+            int startX = (int)Mathf.Lerp(edge1Vertex1.Coordinates.X, edge1Vertex2.Coordinates.X, edge1Proportion);
+            int endX = (int)Mathf.Lerp(edge2Vertex1.Coordinates.X, edge2Vertex2.Coordinates.X, edge2Proportion);
 
-            int sx = (int)Mathf.Lerp(pa.X, pb.X, gradient1);
-            int ex = (int)Mathf.Lerp(pc.X, pd.X, gradient2);
+            float startZ = Mathf.Lerp(edge1Vertex1.Coordinates.Z, edge1Vertex2.Coordinates.Z, edge1Proportion);
+            float endZ = Mathf.Lerp(edge2Vertex1.Coordinates.Z, edge2Vertex2.Coordinates.Z, edge2Proportion);
 
-            // starting Z & ending Z
-            float z1 = Mathf.Lerp(pa.Z, pb.Z, gradient1);
-            float z2 = Mathf.Lerp(pc.Z, pd.Z, gradient2);
-
-            var snl = Mathf.Lerp(data.ndotla, data.ndotlb, gradient1);
-            var enl = Mathf.Lerp(data.ndotlc, data.ndotld, gradient2);
-
-            // drawing a line from left (sx) to right (ex) 
-            for (var x = sx; x < ex; x++)
+            float startReflectionProportion = 0.0f;
+            float endReflectionProportion = 0.0f;
+            if (edge1Vertex1ReflectionProportion.HasValue)
             {
-                float gradient = (x - sx) / (float)(ex - sx);
+                startReflectionProportion = Mathf.Lerp(edge1Vertex1ReflectionProportion.Value, edge1Vertex2ReflectionProportion.Value, edge1Proportion);
+                endReflectionProportion = Mathf.Lerp(edge2Vertex1ReflectionProportion.Value, edge2Vertex2ReflectionProportion.Value, edge2Proportion);
+            }
 
-                var z = Mathf.Lerp(z1, z2, gradient);
+            for (int x = startX; x < endX; x++)
+            {
+                float proportion = (x - startX) / (float)(endX - startX);
 
-                float ndotl;
-                if (RenderMode == RenderMode.FlatShading)
-                    ndotl = data.ndotla;
+                float z = Mathf.Lerp(startZ, endZ, proportion);
+
+                float reflectionProportion;
+                if (faceReflectionProportion.HasValue)
+                    reflectionProportion = faceReflectionProportion.Value;
                 else
-                    ndotl = Mathf.Lerp(snl, enl, gradient);
-                // changing the color value using the cosine of the angle
-                // between the light vector and the normal vector
-                drawPoint(new Vector3(x, data.currentY, z), color * ndotl);
+                    reflectionProportion = Mathf.Lerp(startReflectionProportion, endReflectionProportion, proportion);
+
+                drawPoint(new Vector3(x, y, z), (color * reflectionProportion));
             }
         }
 
-        // Compute the cosine of the angle between the light vector and the normal vector
-        // Returns a value between 0 and 1
-        private float computeNDotL(Vector3 vertex, Vector3 normal, Vector3 lightPosition)
+        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float faceReflectionProportion, Color color)
         {
-            var lightDirection = lightPosition - vertex;
+            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, faceReflectionProportion, null, null, null, null, color);
+        }
+
+        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float edge1Vertex1ReflectionProportion, float edge1Vertex2ReflectionProportion, float edge2Vertex1ReflectionProportion, float edge2Vertex2ReflectionProportion, Color color)
+        {
+            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, null, edge1Vertex1ReflectionProportion, edge1Vertex2ReflectionProportion, edge2Vertex1ReflectionProportion, edge2Vertex2ReflectionProportion, color);
+        }
+
+        private float calculateReflectionProportion(Vector3 position, Vector3 normal)
+        {
+            // Game Engine Architecture - page 473
+
+            Vector3 lightDirection = LightPosition - position;
 
             normal.Normalize();
             lightDirection.Normalize();
 
-            return Math.Max(0, Vector3.Dot(normal, lightDirection));
-        }
-
-        private void drawTriangle(Vertex v1, Vertex v2, Vertex v3, Color color)
-        {
-            // Sorting the points in order to always have this order on screen p1, p2 & p3
-            // with p1 always up (thus having the Y the lowest possible to be near the top screen)
-            // then p2 between p1 & p3
-            if (v1.Coordinates.Y > v2.Coordinates.Y)
-            {
-                var temp = v2;
-                v2 = v1;
-                v1 = temp;
-            }
-
-            if (v2.Coordinates.Y > v3.Coordinates.Y)
-            {
-                var temp = v2;
-                v2 = v3;
-                v3 = temp;
-            }
-
-            if (v1.Coordinates.Y > v2.Coordinates.Y)
-            {
-                var temp = v2;
-                v2 = v1;
-                v1 = temp;
-            }
-
-            Vector3 p1 = v1.Coordinates;
-            Vector3 p2 = v2.Coordinates;
-            Vector3 p3 = v3.Coordinates;
-
-            // Light position 
-            Vector3 lightPos = LightPosition;// new Vector3(0, -10, 10);
-            // computing the cos of the angle between the light vector and the normal vector
-            // it will return a value between 0 and 1 that will be used as the intensity of the color
-
-            float ndotl = 0;
-            float nl1 = 0;
-            float nl2 = 0;
-            float nl3 = 0;
-
-            if (RenderMode == RenderMode.FlatShading)
-            {
-                Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
-                Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
-                ndotl = computeNDotL(centerPoint, vnFace, lightPos);
-            }
-            else
-            {
-                nl1 = computeNDotL(v1.WorldCoordinates, v1.Normal, lightPos);
-                nl2 = computeNDotL(v2.WorldCoordinates, v2.Normal, lightPos);
-                nl3 = computeNDotL(v3.WorldCoordinates, v3.Normal, lightPos);
-            }
-
-            ScanLineData data;
-            if (RenderMode == RenderMode.FlatShading)
-                data = new ScanLineData { ndotla = ndotl };
-            else
-                data = new ScanLineData { };
-
-            // computing lines' directions
-            float dP1P2, dP1P3;
-
-            // http://en.wikipedia.org/wiki/Slope
-            // Computing slopes
-            if (p2.Y - p1.Y > 0)
-                dP1P2 = (p2.X - p1.X) / (p2.Y - p1.Y);
-            else
-                dP1P2 = 0;
-
-            if (p3.Y - p1.Y > 0)
-                dP1P3 = (p3.X - p1.X) / (p3.Y - p1.Y);
-            else
-                dP1P3 = 0;
-
-            if (dP1P2 > dP1P3)
-            {
-                for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
-                {
-                    data.currentY = y;
-
-                    if (y < p2.Y)
-                    {
-                        if (RenderMode == RenderMode.SmoothShading)
-                        {
-                            data.ndotla = nl1;
-                            data.ndotlb = nl3;
-                            data.ndotlc = nl1;
-                            data.ndotld = nl2;
-                        }
-                        processScanLine(data, v1, v3, v1, v2, color);
-                    }
-                    else
-                    {
-                        if (RenderMode == RenderMode.SmoothShading)
-                        {
-                            data.ndotla = nl1;
-                            data.ndotlb = nl3;
-                            data.ndotlc = nl2;
-                            data.ndotld = nl3;
-                        }
-                        processScanLine(data, v1, v3, v2, v3, color);
-                    }
-                }
-            }
-            else
-            {
-                for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
-                {
-                    data.currentY = y;
-
-                    if (y < p2.Y)
-                    {
-                        if (RenderMode == RenderMode.SmoothShading)
-                        {
-                            data.ndotla = nl1;
-                            data.ndotlb = nl2;
-                            data.ndotlc = nl1;
-                            data.ndotld = nl3;
-                        }
-                        processScanLine(data, v1, v2, v1, v3, color);
-                    }
-                    else
-                    {
-                        if (RenderMode == RenderMode.SmoothShading)
-                        {
-                            data.ndotla = nl2;
-                            data.ndotlb = nl3;
-                            data.ndotlc = nl1;
-                            data.ndotld = nl3;
-                        }
-                        processScanLine(data, v2, v3, v1, v3, color);
-                    }
-                }
-            }
+            return (Mathf.Clamp01(Vector3.Dot(normal, lightDirection)));
         }
     }
 }
