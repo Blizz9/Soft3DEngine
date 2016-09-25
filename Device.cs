@@ -169,21 +169,21 @@ namespace Soft3DEngine
             vertex2 = sortedVertices.ElementAt(1);
             vertex3 = sortedVertices.Last();
 
-            float faceReflectionProportion = 0.0f;
-            float vertex1ReflectionProportion = 0;
-            float vertex2ReflectionProportion = 0;
-            float vertex3ReflectionProportion = 0;
+            float faceReflectivity = 0.0f;
+            float vertex1Reflectivity = 0;
+            float vertex2Reflectivity = 0;
+            float vertex3Reflectivity = 0;
             if (RenderMode == RenderMode.FlatShading)
             {
                 Vector3 faceNormal = (vertex1.Normal + vertex2.Normal + vertex3.Normal) / 3.0f;
                 Vector3 faceCentroid = (vertex1.WorldCoordinates + vertex2.WorldCoordinates + vertex3.WorldCoordinates) / 3.0f;
-                faceReflectionProportion = calculateReflectionProportion(faceCentroid, faceNormal);
+                faceReflectivity = calculateReflectivity(faceCentroid, faceNormal);
             }
             else
             {
-                vertex1ReflectionProportion = calculateReflectionProportion(vertex1.WorldCoordinates, vertex1.Normal);
-                vertex2ReflectionProportion = calculateReflectionProportion(vertex2.WorldCoordinates, vertex2.Normal);
-                vertex3ReflectionProportion = calculateReflectionProportion(vertex3.WorldCoordinates, vertex3.Normal);
+                vertex1Reflectivity = calculateReflectivity(vertex1.WorldCoordinates, vertex1.Normal);
+                vertex2Reflectivity = calculateReflectivity(vertex2.WorldCoordinates, vertex2.Normal);
+                vertex3Reflectivity = calculateReflectivity(vertex3.WorldCoordinates, vertex3.Normal);
             }
 
             float vertex1Vertex2Slope;
@@ -203,74 +203,74 @@ namespace Soft3DEngine
                 for (int y = (int)vertex1.Coordinates.Y; y <= (int)vertex3.Coordinates.Y; y++)
                     if (y < vertex2.Coordinates.Y)
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, faceReflectionProportion, color);
+                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, vertex1ReflectionProportion, vertex3ReflectionProportion, vertex1ReflectionProportion, vertex2ReflectionProportion, color);
+                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, vertex1Reflectivity, vertex3Reflectivity, vertex1Reflectivity, vertex2Reflectivity, color);
                     else
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, faceReflectionProportion, color);
+                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, vertex1ReflectionProportion, vertex3ReflectionProportion, vertex2ReflectionProportion, vertex3ReflectionProportion, color);
+                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, vertex1Reflectivity, vertex3Reflectivity, vertex2Reflectivity, vertex3Reflectivity, color);
             else
                 for (int y = (int)vertex1.Coordinates.Y; y <= (int)vertex3.Coordinates.Y; y++)
                     if (y < vertex2.Coordinates.Y)
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, faceReflectionProportion, color);
+                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, vertex1ReflectionProportion, vertex2ReflectionProportion, vertex1ReflectionProportion, vertex3ReflectionProportion, color);
+                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, vertex1Reflectivity, vertex2Reflectivity, vertex1Reflectivity, vertex3Reflectivity, color);
                     else
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, faceReflectionProportion, color);
+                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, vertex2ReflectionProportion, vertex3ReflectionProportion, vertex1ReflectionProportion, vertex3ReflectionProportion, color);
+                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, vertex2Reflectivity, vertex3Reflectivity, vertex1Reflectivity, vertex3Reflectivity, color);
         }
 
-        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float? faceReflectionProportion, float? edge1Vertex1ReflectionProportion, float? edge1Vertex2ReflectionProportion, float? edge2Vertex1ReflectionProportion, float? edge2Vertex2ReflectionProportion, Color color)
+        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float? faceReflectivity, float? edge1Vertex1Reflectivity, float? edge1Vertex2Reflectivity, float? edge2Vertex1Reflectivity, float? edge2Vertex2Reflectivity, Color color)
         {
-            float edge1Proportion = edge1Vertex1.Coordinates.Y != edge1Vertex2.Coordinates.Y ? (y - edge1Vertex1.Coordinates.Y) / (edge1Vertex2.Coordinates.Y - edge1Vertex1.Coordinates.Y) : 1;
-            float edge2Proportion = edge2Vertex1.Coordinates.Y != edge2Vertex2.Coordinates.Y ? (y - edge2Vertex1.Coordinates.Y) / (edge2Vertex2.Coordinates.Y - edge2Vertex1.Coordinates.Y) : 1;
+            float edge1YProportion = edge1Vertex1.Coordinates.Y != edge1Vertex2.Coordinates.Y ? (y - edge1Vertex1.Coordinates.Y) / (edge1Vertex2.Coordinates.Y - edge1Vertex1.Coordinates.Y) : 1;
+            float edge2YProportion = edge2Vertex1.Coordinates.Y != edge2Vertex2.Coordinates.Y ? (y - edge2Vertex1.Coordinates.Y) / (edge2Vertex2.Coordinates.Y - edge2Vertex1.Coordinates.Y) : 1;
 
-            int startX = (int)Mathf.Lerp(edge1Vertex1.Coordinates.X, edge1Vertex2.Coordinates.X, edge1Proportion);
-            int endX = (int)Mathf.Lerp(edge2Vertex1.Coordinates.X, edge2Vertex2.Coordinates.X, edge2Proportion);
+            int startX = (int)Mathf.Lerp(edge1Vertex1.Coordinates.X, edge1Vertex2.Coordinates.X, edge1YProportion);
+            int endX = (int)Mathf.Lerp(edge2Vertex1.Coordinates.X, edge2Vertex2.Coordinates.X, edge2YProportion);
 
-            float startZ = Mathf.Lerp(edge1Vertex1.Coordinates.Z, edge1Vertex2.Coordinates.Z, edge1Proportion);
-            float endZ = Mathf.Lerp(edge2Vertex1.Coordinates.Z, edge2Vertex2.Coordinates.Z, edge2Proportion);
+            float startZ = Mathf.Lerp(edge1Vertex1.Coordinates.Z, edge1Vertex2.Coordinates.Z, edge1YProportion);
+            float endZ = Mathf.Lerp(edge2Vertex1.Coordinates.Z, edge2Vertex2.Coordinates.Z, edge2YProportion);
 
-            float startReflectionProportion = 0.0f;
-            float endReflectionProportion = 0.0f;
-            if (edge1Vertex1ReflectionProportion.HasValue)
+            float startReflectivity = 0.0f;
+            float endReflectivity = 0.0f;
+            if (edge1Vertex1Reflectivity.HasValue)
             {
-                startReflectionProportion = Mathf.Lerp(edge1Vertex1ReflectionProportion.Value, edge1Vertex2ReflectionProportion.Value, edge1Proportion);
-                endReflectionProportion = Mathf.Lerp(edge2Vertex1ReflectionProportion.Value, edge2Vertex2ReflectionProportion.Value, edge2Proportion);
+                startReflectivity = Mathf.Lerp(edge1Vertex1Reflectivity.Value, edge1Vertex2Reflectivity.Value, edge1YProportion);
+                endReflectivity = Mathf.Lerp(edge2Vertex1Reflectivity.Value, edge2Vertex2Reflectivity.Value, edge2YProportion);
             }
 
             for (int x = startX; x < endX; x++)
             {
-                float proportion = (x - startX) / (float)(endX - startX);
+                float xProportion = (x - startX) / (float)(endX - startX);
 
-                float z = Mathf.Lerp(startZ, endZ, proportion);
+                float z = Mathf.Lerp(startZ, endZ, xProportion);
 
-                float reflectionProportion;
-                if (faceReflectionProportion.HasValue)
-                    reflectionProportion = faceReflectionProportion.Value;
+                float reflectivity;
+                if (faceReflectivity.HasValue)
+                    reflectivity = faceReflectivity.Value;
                 else
-                    reflectionProportion = Mathf.Lerp(startReflectionProportion, endReflectionProportion, proportion);
+                    reflectivity = Mathf.Lerp(startReflectivity, endReflectivity, xProportion);
 
-                drawPoint(new Vector3(x, y, z), (color * reflectionProportion));
+                drawPoint(new Vector3(x, y, z), (color * reflectivity));
             }
         }
 
-        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float faceReflectionProportion, Color color)
+        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float faceReflectivity, Color color)
         {
-            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, faceReflectionProportion, null, null, null, null, color);
+            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, faceReflectivity, null, null, null, null, color);
         }
 
-        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float edge1Vertex1ReflectionProportion, float edge1Vertex2ReflectionProportion, float edge2Vertex1ReflectionProportion, float edge2Vertex2ReflectionProportion, Color color)
+        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float edge1Vertex1Reflectivity, float edge1Vertex2Reflectivity, float edge2Vertex1Reflectivity, float edge2Vertex2Reflectivity, Color color)
         {
-            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, null, edge1Vertex1ReflectionProportion, edge1Vertex2ReflectionProportion, edge2Vertex1ReflectionProportion, edge2Vertex2ReflectionProportion, color);
+            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, null, edge1Vertex1Reflectivity, edge1Vertex2Reflectivity, edge2Vertex1Reflectivity, edge2Vertex2Reflectivity, color);
         }
 
-        private float calculateReflectionProportion(Vector3 position, Vector3 normal)
+        private float calculateReflectivity(Vector3 position, Vector3 normal)
         {
             // Game Engine Architecture - page 473
 
