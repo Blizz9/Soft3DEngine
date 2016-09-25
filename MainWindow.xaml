@@ -2,9 +2,136 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Soft 3D Engine" Loaded="loaded"
-        Height="747" Width="960">
+        Height="747" Width="1348">
         <!--Height="1080" Width="1920" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" WindowState="Maximized">-->
     <Grid>
-        <Image x:Name="screen" />
+        <StackPanel Orientation="Horizontal">
+            <Image x:Name="screen" />
+            <StackPanel Margin="10,0">
+                <GroupBox Header="Render Resolution" Margin="0,-5,0,0">
+                    <StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderResolution" Checked="lowestResolutionRadioButtonChecked" />
+                            <TextBlock Text="160 x 120" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderResolution" Checked="lowResolutionRadioButtonChecked" />
+                            <TextBlock Text="320 x 240" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderResolution" IsChecked="True" Checked="mediumResolutionRadioButtonChecked" />
+                            <TextBlock Text="640 x 480" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderResolution" Checked="highResolutionRadioButtonChecked" />
+                            <TextBlock Text="1024 x 768" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Render Mode" Margin="0,5,0,0">
+                    <StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderMode" Checked="pointRadioButtonChecked" />
+                            <TextBlock Text="Point" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderMode" IsChecked="True" Checked="wireframeRadioButtonChecked" />
+                            <TextBlock Text="Wireframe" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderMode" Checked="flatShadingRadioButtonChecked" />
+                            <TextBlock Text="Flat Shading" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="RenderMode" Checked="smoothShadingRadioButtonChecked" />
+                            <TextBlock Text="Smooth Shading" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Model" Margin="0,5,0,0">
+                    <StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="Model" IsChecked="True" Checked="cubeRadioButtonChecked" />
+                            <TextBlock Text="Cube" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="Model" Checked="dominoRadioButtonChecked" />
+                            <TextBlock Text="Domino" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="Model" Checked="suzanneRadioButtonChecked" />
+                            <TextBlock Text="Suzanne" />
+                        </StackPanel>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <RadioButton GroupName="Model" Checked="marioRadioButtonChecked" />
+                            <TextBlock Text="Mario - Super Mario Galaxy" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Model Rotation (per frame)" Margin="0,5,0,0">
+                    <StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="X:" Width="15" />
+                            <Slider x:Name="_modelRotationXSlider" LargeChange="0.05" Maximum=".1" Minimum="-.1" SmallChange="0.01" Width="300" ValueChanged="modelRotationSliderValueChanged" />
+                            <TextBlock x:Name="_modelRotationXTextBlock" Text="0.00" Width="35" />
+                        </StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="Y:" Width="15" />
+                            <Slider x:Name="_modelRotationYSlider" LargeChange="0.05" Maximum=".1" Minimum="-.1" SmallChange="0.01" Value=".02" Width="300" ValueChanged="modelRotationSliderValueChanged" />
+                            <TextBlock x:Name="_modelRotationYTextBlock" Text="0.02" Width="35" />
+                        </StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="Z:" Width="15" />
+                            <Slider x:Name="_modelRotationZSlider" LargeChange="0.05" Maximum=".1" Minimum="-.1" SmallChange="0.01" Width="300" ValueChanged="modelRotationSliderValueChanged" />
+                            <TextBlock x:Name="_modelRotationZTextBlock" Text="0.00" Width="35" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Camera Position" Margin="0,5,0,0">
+                    <StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="X:" Width="15" />
+                            <Slider x:Name="_cameraPositionXSlider" Maximum="100" Minimum="-100" Width="300" ValueChanged="cameraPositionSliderValueChanged" />
+                            <TextBlock x:Name="_cameraPositionXTextBlock" Text="0" Width="35" />
+                        </StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="Y:" Width="15" />
+                            <Slider x:Name="_cameraPositionYSlider" Maximum="100" Minimum="-100" Width="300" ValueChanged="cameraPositionSliderValueChanged" />
+                            <TextBlock x:Name="_cameraPositionYTextBlock" Text="0" Width="35" />
+                        </StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="Z:" Width="15" />
+                            <Slider x:Name="_cameraPositionZSlider" Maximum="100" Minimum="-100" Value="10" Width="300" ValueChanged="cameraPositionSliderValueChanged" />
+                            <TextBlock x:Name="_cameraPositionZTextBlock" Text="10.00" Width="35" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Light Position" Margin="0,5,0,0">
+                    <StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="X:" Width="15" />
+                            <Slider x:Name="_lightPositionXSlider" Maximum="100" Minimum="-100" Width="300" ValueChanged="lightPositionSliderValueChanged" />
+                            <TextBlock x:Name="_lightPositionXTextBlock" Text="0" Width="35" />
+                        </StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="Y:" Width="15" />
+                            <Slider x:Name="_lightPositionYSlider" Maximum="100" Minimum="-100" Value="10" Width="300" ValueChanged="lightPositionSliderValueChanged" />
+                            <TextBlock x:Name="_lightPositionYTextBlock" Text="10.00" Width="35" />
+                        </StackPanel>
+                        <StackPanel Margin="2,5" Orientation="Horizontal">
+                            <TextBlock Text="Z:" Width="15" />
+                            <Slider x:Name="_lightPositionZSlider" Maximum="100" Minimum="-100" Value="10" Width="300" ValueChanged="lightPositionSliderValueChanged" />
+                            <TextBlock x:Name="_lightPositionZTextBlock" Text="10.00" Width="35" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Field of View" Margin="0,5,0,0">
+                    <StackPanel Margin="2,5" Orientation="Horizontal">
+                        <Slider x:Name="_fieldOfViewSlider" LargeChange="0.05" Maximum=".9" Minimum=".1" SmallChange="0.01" Value=".78" Width="300" ValueChanged="fieldOfViewSliderValueChanged" />
+                        <TextBlock x:Name="_fieldOfViewTextBlock" Text="0.78" Width="35" />
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Window>

@@ -12,6 +12,9 @@ namespace Soft3DEngine
         private byte[] _backBuffer;
         private float[] _depthBuffer;
 
+        public RenderMode RenderMode;
+        public Vector3 LightPosition;
+
         public Device(WriteableBitmap renderTarget)
         {
             _renderTarget = renderTarget;
@@ -43,7 +46,6 @@ namespace Soft3DEngine
                 Matrix4x4 worldMatrix = Matrix4x4.CreateRotation(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) * Matrix4x4.CreateTranslation(mesh.Position);
                 Matrix4x4 transformationMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                int index = 0;
                 foreach (Face face in mesh.Faces)
                 {
                     Vertex vertexA = mesh.Vertices[face.A];
@@ -54,25 +56,23 @@ namespace Soft3DEngine
                     Vertex pointB = project(vertexB, worldMatrix, transformationMatrix);
                     Vertex pointC = project(vertexC, worldMatrix, transformationMatrix);
 
-                    drawTriangle(pointA, pointB, pointC, Colors.Black);
-
-                    index++;
+                    if (RenderMode == RenderMode.Point)
+                    {
+                        drawPoint(pointA.Coordinates, Colors.Yellow);
+                        drawPoint(pointB.Coordinates, Colors.Yellow);
+                        drawPoint(pointC.Coordinates, Colors.Yellow);
+                    }
+                    else if (RenderMode == RenderMode.Wireframe)
+                    {
+                        drawLine(pointA.Coordinates, pointB.Coordinates);
+                        drawLine(pointB.Coordinates, pointC.Coordinates);
+                        drawLine(pointC.Coordinates, pointA.Coordinates);
+                    }
+                    else
+                    {
+                        drawTriangle(pointA, pointB, pointC, Colors.Black);
+                    }
                 }
-
-                //foreach (Face face in mesh.Faces)
-                //{
-                //    Vertex vertexA = mesh.Vertices[face.A];
-                //    Vertex vertexB = mesh.Vertices[face.B];
-                //    Vertex vertexC = mesh.Vertices[face.C];
-
-                //    Vertex pointA = project(vertexA, worldMatrix, transformationMatrix);
-                //    Vertex pointB = project(vertexB, worldMatrix, transformationMatrix);
-                //    Vertex pointC = project(vertexC, worldMatrix, transformationMatrix);
-
-                //    drawLine(pointA.Coordinates, pointB.Coordinates);
-                //    drawLine(pointB.Coordinates, pointC.Coordinates);
-                //    drawLine(pointC.Coordinates, pointA.Coordinates);
-                //}
             }
         }
 
@@ -354,7 +354,12 @@ namespace Soft3DEngine
                 float gradient = (x - sx) / (float)(ex - sx);
 
                 var z = Mathf.Lerp(z1, z2, gradient);
-                var ndotl = Mathf.Lerp(snl, enl, gradient);
+
+                float ndotl;
+                if (RenderMode == RenderMode.FlatShading)
+                    ndotl = data.ndotla;
+                else
+                    ndotl = Mathf.Lerp(snl, enl, gradient);
                 // changing the color value using the cosine of the angle
                 // between the light vector and the normal vector
                 drawPoint(new Vector3(x, data.currentY, z), color * ndotl);
@@ -404,14 +409,33 @@ namespace Soft3DEngine
             Vector3 p3 = v3.Coordinates;
 
             // Light position 
-            Vector3 lightPos = new Vector3(0, -10, 10);
+            Vector3 lightPos = LightPosition;// new Vector3(0, -10, 10);
             // computing the cos of the angle between the light vector and the normal vector
             // it will return a value between 0 and 1 that will be used as the intensity of the color
-            float nl1 = computeNDotL(v1.WorldCoordinates, v1.Normal, lightPos);
-            float nl2 = computeNDotL(v2.WorldCoordinates, v2.Normal, lightPos);
-            float nl3 = computeNDotL(v3.WorldCoordinates, v3.Normal, lightPos);
 
-            var data = new ScanLineData { };
+            float ndotl = 0;
+            float nl1 = 0;
+            float nl2 = 0;
+            float nl3 = 0;
+
+            if (RenderMode == RenderMode.FlatShading)
+            {
+                Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
+                Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
+                ndotl = computeNDotL(centerPoint, vnFace, lightPos);
+            }
+            else
+            {
+                nl1 = computeNDotL(v1.WorldCoordinates, v1.Normal, lightPos);
+                nl2 = computeNDotL(v2.WorldCoordinates, v2.Normal, lightPos);
+                nl3 = computeNDotL(v3.WorldCoordinates, v3.Normal, lightPos);
+            }
+
+            ScanLineData data;
+            if (RenderMode == RenderMode.FlatShading)
+                data = new ScanLineData { ndotla = ndotl };
+            else
+                data = new ScanLineData { };
 
             // computing lines' directions
             float dP1P2, dP1P3;
@@ -436,18 +460,24 @@ namespace Soft3DEngine
 
                     if (y < p2.Y)
                     {
-                        data.ndotla = nl1;
-                        data.ndotlb = nl3;
-                        data.ndotlc = nl1;
-                        data.ndotld = nl2;
+                        if (RenderMode == RenderMode.SmoothShading)
+                        {
+                            data.ndotla = nl1;
+                            data.ndotlb = nl3;
+                            data.ndotlc = nl1;
+                            data.ndotld = nl2;
+                        }
                         processScanLine(data, v1, v3, v1, v2, color);
                     }
                     else
                     {
-                        data.ndotla = nl1;
-                        data.ndotlb = nl3;
-                        data.ndotlc = nl2;
-                        data.ndotld = nl3;
+                        if (RenderMode == RenderMode.SmoothShading)
+                        {
+                            data.ndotla = nl1;
+                            data.ndotlb = nl3;
+                            data.ndotlc = nl2;
+                            data.ndotld = nl3;
+                        }
                         processScanLine(data, v1, v3, v2, v3, color);
                     }
                 }
@@ -460,18 +490,24 @@ namespace Soft3DEngine
 
                     if (y < p2.Y)
                     {
-                        data.ndotla = nl1;
-                        data.ndotlb = nl2;
-                        data.ndotlc = nl1;
-                        data.ndotld = nl3;
+                        if (RenderMode == RenderMode.SmoothShading)
+                        {
+                            data.ndotla = nl1;
+                            data.ndotlb = nl2;
+                            data.ndotlc = nl1;
+                            data.ndotld = nl3;
+                        }
                         processScanLine(data, v1, v2, v1, v3, color);
                     }
                     else
                     {
-                        data.ndotla = nl2;
-                        data.ndotlb = nl3;
-                        data.ndotlc = nl1;
-                        data.ndotld = nl3;
+                        if (RenderMode == RenderMode.SmoothShading)
+                        {
+                            data.ndotla = nl2;
+                            data.ndotlb = nl3;
+                            data.ndotlc = nl1;
+                            data.ndotld = nl3;
+                        }
                         processScanLine(data, v2, v3, v1, v3, color);
                     }
                 }

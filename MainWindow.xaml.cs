@@ -16,6 +16,9 @@ namespace Soft3DEngine
         private Camera _camera;
         private List<Mesh> _meshes;
 
+        private RenderMode _lastRenderMode;
+        private string _lastLoadedModel;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -23,29 +26,9 @@ namespace Soft3DEngine
 
         private void loaded(object sender, RoutedEventArgs e)
         {
-            WriteableBitmap screenBuffer = new WriteableBitmap(640, 480, 300, 300, PixelFormats.Bgra32, null);
-            screen.Source = screenBuffer;
-            RenderOptions.SetBitmapScalingMode(screen, BitmapScalingMode.NearestNeighbor);
-
-            _device = new Device(screenBuffer);
-
-            _camera = new Camera();
-            _camera.FieldOfView = 0.78f;
-            _camera.Aspect = (float)screenBuffer.PixelWidth / screenBuffer.PixelHeight;
-            _camera.NearClipPlane = 0.01f;
-            _camera.FarClipPlane = 1.0f;
-
-            //_meshes = loadModelJSON("monkey.babylon");
-            _meshes = loadModelJSON("Suzanne.model.json");
-            //_meshes = loadModelJSON("Domino.model.json");
-            //_meshes = loadModelJSON("Cube.model.json");
-            //_meshes = loadModelJSON("Plane.model.json");
-            _camera.Position = new Vector3(0.0f, 0.0f, 10.0f);
-            _camera.Target = Vector3.Zero;
-
-            //_meshes = loadModelJSON("Mario.model.json");
-            //_camera.Position = new Vector3(0.0f, 1.8f, 10.0f);
-            //_camera.Target = new Vector3(0.0f, 1.8f, 0.0f);
+            _lastRenderMode = RenderMode.Wireframe;
+            _lastLoadedModel = "Cube.model.json";
+            initializeComponents(640, 480);
 
             CompositionTarget.Rendering += compositionTargetRendering;
         }
@@ -55,10 +38,35 @@ namespace Soft3DEngine
             _device.Clear(Colors.Black);
 
             foreach (Mesh mesh in _meshes)
-                mesh.Rotation = new Vector3(mesh.Rotation.X + 0.00f, mesh.Rotation.Y + 0.03f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X + (float)_modelRotationXSlider.Value, mesh.Rotation.Y + (float)_modelRotationYSlider.Value, mesh.Rotation.Z + (float)_modelRotationZSlider.Value);
 
             _device.Render(_camera, _meshes);
             _device.Present();
+        }
+
+        private void initializeComponents(int pixelWidth, int pixelHeight)
+        {
+            WriteableBitmap screenBuffer = new WriteableBitmap(pixelWidth, pixelHeight, 300, 300, PixelFormats.Bgra32, null);
+            screen.Source = screenBuffer;
+            RenderOptions.SetBitmapScalingMode(screen, BitmapScalingMode.NearestNeighbor);
+
+            _device = new Device(screenBuffer);
+            _device.RenderMode = _lastRenderMode;
+            _device.LightPosition = new Vector3((float)_lightPositionXSlider.Value, (float)-_lightPositionYSlider.Value, (float)_lightPositionZSlider.Value);
+
+            _camera = new Camera();
+            _camera.FieldOfView = (float)_fieldOfViewSlider.Value;
+            _camera.Aspect = (float)screenBuffer.PixelWidth / screenBuffer.PixelHeight;
+            _camera.NearClipPlane = 0.01f;
+            _camera.FarClipPlane = 1.0f;
+
+            _meshes = loadModelJSON(_lastLoadedModel);
+            _camera.Position = new Vector3((float)_cameraPositionXSlider.Value, (float)_cameraPositionYSlider.Value, (float)_cameraPositionZSlider.Value);
+            _camera.Target = Vector3.Zero;
+
+            //_meshes = loadModelJSON("Mario.model.json");
+            //_camera.Position = new Vector3(0.0f, 1.8f, 10.0f);
+            //_camera.Target = new Vector3(0.0f, 1.8f, 0.0f);
         }
 
         private List<Mesh> loadModelJSON(string fileName)
@@ -122,6 +130,138 @@ namespace Soft3DEngine
             }
 
             return (meshes);
+        }
+
+        private void lowestResolutionRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            initializeComponents(160, 120);
+        }
+
+        private void lowResolutionRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            initializeComponents(320, 240);
+        }
+
+        private void mediumResolutionRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            if (_lightPositionXSlider != null)
+                initializeComponents(640, 480);
+        }
+
+        private void highResolutionRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            initializeComponents(1024, 768);
+        }
+
+        private void pointRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            if (_device != null)
+            {
+                _device.RenderMode = RenderMode.Point;
+                _lastRenderMode = RenderMode.Point;
+            }
+        }
+
+        private void wireframeRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            if (_device != null)
+            {
+                _device.RenderMode = RenderMode.Wireframe;
+                _lastRenderMode = RenderMode.Wireframe;
+            }
+        }
+
+        private void flatShadingRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            if (_device != null)
+            {
+                _device.RenderMode = RenderMode.FlatShading;
+                _lastRenderMode = RenderMode.FlatShading;
+            }
+        }
+
+        private void smoothShadingRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            if (_device != null)
+            {
+                _device.RenderMode = RenderMode.SmoothShading;
+                _lastRenderMode = RenderMode.SmoothShading;
+            }
+        }
+
+        private void cubeRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Cube.model.json");
+            _lastLoadedModel = "Cube.model.json";
+        }
+
+        private void dominoRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Domino.model.json");
+            _lastLoadedModel = "Domino.model.json";
+        }
+
+        private void suzanneRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Suzanne.model.json");
+            _lastLoadedModel = "Suzanne.model.json";
+        }
+
+        private void marioRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Mario.model.json");
+            _lastLoadedModel = "Mario.model.json";
+        }
+
+        private void modelRotationSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_modelRotationXTextBlock != null)
+                _modelRotationXTextBlock.Text = _modelRotationXSlider.Value.ToString("n2");
+
+            if (_modelRotationYTextBlock != null)
+                _modelRotationYTextBlock.Text = _modelRotationYSlider.Value.ToString("n2");
+
+            if (_modelRotationZTextBlock != null)
+                _modelRotationZTextBlock.Text = _modelRotationZSlider.Value.ToString("n2");
+        }
+
+        private void cameraPositionSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_cameraPositionXTextBlock != null)
+                _cameraPositionXTextBlock.Text = _cameraPositionXSlider.Value.ToString("n2");
+
+            if (_cameraPositionYTextBlock != null)
+                _cameraPositionYTextBlock.Text = _cameraPositionYSlider.Value.ToString("n2");
+
+            if (_cameraPositionZTextBlock != null)
+                _cameraPositionZTextBlock.Text = _cameraPositionZSlider.Value.ToString("n2");
+
+            if (_camera != null)
+                _camera.Position = new Vector3((float)_cameraPositionXSlider.Value, (float)_cameraPositionYSlider.Value, (float)_cameraPositionZSlider.Value);
+        }
+
+        private void lightPositionSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_lightPositionXTextBlock != null)
+                _lightPositionXTextBlock.Text = _lightPositionXSlider.Value.ToString("n2");
+
+            if (_lightPositionYTextBlock != null)
+                _lightPositionYTextBlock.Text = _lightPositionYSlider.Value.ToString("n2");
+
+            if (_lightPositionZTextBlock != null)
+                _lightPositionZTextBlock.Text = _lightPositionZSlider.Value.ToString("n2");
+
+            if (_device != null)
+                _device.LightPosition = new Vector3((float)_lightPositionXSlider.Value, (float)-_lightPositionYSlider.Value, (float)_lightPositionZSlider.Value);
+        }
+
+        private void fieldOfViewSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_fieldOfViewTextBlock != null)
+                _fieldOfViewTextBlock.Text = _fieldOfViewSlider.Value.ToString("n2");
+
+            if (_camera != null)
+                _camera.FieldOfView = (float)_fieldOfViewSlider.Value;
         }
     }
 }
