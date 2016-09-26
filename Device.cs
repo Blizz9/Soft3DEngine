@@ -203,29 +203,29 @@ namespace Soft3DEngine
                 for (int y = (int)vertex1.Coordinates.Y; y <= (int)vertex3.Coordinates.Y; y++)
                     if (y < vertex2.Coordinates.Y)
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, faceReflectivity, color);
+                            drawTriangleScanLine(y, vertex1, vertex3, vertex1, vertex2, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex1, vertex3, vertex1, vertex2, vertex1Reflectivity, vertex3Reflectivity, vertex1Reflectivity, vertex2Reflectivity, color);
+                            drawTriangleScanLine(y, vertex1, vertex3, vertex1, vertex2, vertex1Reflectivity, vertex3Reflectivity, vertex1Reflectivity, vertex2Reflectivity, color);
                     else
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, faceReflectivity, color);
+                            drawTriangleScanLine(y, vertex1, vertex3, vertex2, vertex3, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex1, vertex3, vertex2, vertex3, vertex1Reflectivity, vertex3Reflectivity, vertex2Reflectivity, vertex3Reflectivity, color);
+                            drawTriangleScanLine(y, vertex1, vertex3, vertex2, vertex3, vertex1Reflectivity, vertex3Reflectivity, vertex2Reflectivity, vertex3Reflectivity, color);
             else
                 for (int y = (int)vertex1.Coordinates.Y; y <= (int)vertex3.Coordinates.Y; y++)
                     if (y < vertex2.Coordinates.Y)
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, faceReflectivity, color);
+                            drawTriangleScanLine(y, vertex1, vertex2, vertex1, vertex3, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex1, vertex2, vertex1, vertex3, vertex1Reflectivity, vertex2Reflectivity, vertex1Reflectivity, vertex3Reflectivity, color);
+                            drawTriangleScanLine(y, vertex1, vertex2, vertex1, vertex3, vertex1Reflectivity, vertex2Reflectivity, vertex1Reflectivity, vertex3Reflectivity, color);
                     else
                         if (renderMode == RenderMode.FlatShading)
-                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, faceReflectivity, color);
+                            drawTriangleScanLine(y, vertex2, vertex3, vertex1, vertex3, faceReflectivity, color);
                         else
-                            processScanLine(y, vertex2, vertex3, vertex1, vertex3, vertex2Reflectivity, vertex3Reflectivity, vertex1Reflectivity, vertex3Reflectivity, color);
+                            drawTriangleScanLine(y, vertex2, vertex3, vertex1, vertex3, vertex2Reflectivity, vertex3Reflectivity, vertex1Reflectivity, vertex3Reflectivity, color);
         }
 
-        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float? faceReflectivity, float? edge1Vertex1Reflectivity, float? edge1Vertex2Reflectivity, float? edge2Vertex1Reflectivity, float? edge2Vertex2Reflectivity, Color color)
+        private void drawTriangleScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float? faceReflectivity, float? edge1Vertex1Reflectivity, float? edge1Vertex2Reflectivity, float? edge2Vertex1Reflectivity, float? edge2Vertex2Reflectivity, Color color)
         {
             float edge1YProportion = edge1Vertex1.Coordinates.Y != edge1Vertex2.Coordinates.Y ? (y - edge1Vertex1.Coordinates.Y) / (edge1Vertex2.Coordinates.Y - edge1Vertex1.Coordinates.Y) : 1;
             float edge2YProportion = edge2Vertex1.Coordinates.Y != edge2Vertex2.Coordinates.Y ? (y - edge2Vertex1.Coordinates.Y) / (edge2Vertex2.Coordinates.Y - edge2Vertex1.Coordinates.Y) : 1;
@@ -260,14 +260,14 @@ namespace Soft3DEngine
             }
         }
 
-        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float faceReflectivity, Color color)
+        private void drawTriangleScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float faceReflectivity, Color color)
         {
-            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, faceReflectivity, null, null, null, null, color);
+            drawTriangleScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, faceReflectivity, null, null, null, null, color);
         }
 
-        private void processScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float edge1Vertex1Reflectivity, float edge1Vertex2Reflectivity, float edge2Vertex1Reflectivity, float edge2Vertex2Reflectivity, Color color)
+        private void drawTriangleScanLine(int y, Vertex edge1Vertex1, Vertex edge1Vertex2, Vertex edge2Vertex1, Vertex edge2Vertex2, float edge1Vertex1Reflectivity, float edge1Vertex2Reflectivity, float edge2Vertex1Reflectivity, float edge2Vertex2Reflectivity, Color color)
         {
-            processScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, null, edge1Vertex1Reflectivity, edge1Vertex2Reflectivity, edge2Vertex1Reflectivity, edge2Vertex2Reflectivity, color);
+            drawTriangleScanLine(y, edge1Vertex1, edge1Vertex2, edge2Vertex1, edge2Vertex2, null, edge1Vertex1Reflectivity, edge1Vertex2Reflectivity, edge2Vertex1Reflectivity, edge2Vertex2Reflectivity, color);
         }
 
         private float calculateReflectivity(Vector3 position, Vector3 normal)

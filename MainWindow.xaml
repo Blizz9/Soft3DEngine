@@ -49,22 +49,42 @@
                     </StackPanel>
                 </GroupBox>
                 <GroupBox Header="Model" Margin="0,5,0,0">
-                    <StackPanel>
-                        <StackPanel Margin="2" Orientation="Horizontal">
-                            <RadioButton GroupName="Model" IsChecked="True" Checked="cubeRadioButtonChecked" />
-                            <TextBlock Text="Cube" />
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" IsChecked="True" Checked="cubeRadioButtonChecked" />
+                                <TextBlock Text="Cube" />
+                            </StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="dominoRadioButtonChecked" />
+                                <TextBlock Text="Domino" />
+                            </StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="suzanneRadioButtonChecked" />
+                                <TextBlock Text="Suzanne" />
+                            </StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="arwingRadioButtonChecked" />
+                                <TextBlock Text="Arwing [N64]" />
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Margin="2" Orientation="Horizontal">
-                            <RadioButton GroupName="Model" Checked="dominoRadioButtonChecked" />
-                            <TextBlock Text="Domino" />
-                        </StackPanel>
-                        <StackPanel Margin="2" Orientation="Horizontal">
-                            <RadioButton GroupName="Model" Checked="suzanneRadioButtonChecked" />
-                            <TextBlock Text="Suzanne" />
-                        </StackPanel>
-                        <StackPanel Margin="2" Orientation="Horizontal">
-                            <RadioButton GroupName="Model" Checked="marioRadioButtonChecked" />
-                            <TextBlock Text="Mario - Super Mario Galaxy" />
+                        <StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="deagleRadioButtonChecked" />
+                                <TextBlock Text="Deagle [CS:S]" />
+                            </StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="sackboyRadioButtonChecked" />
+                                <TextBlock Text="Sackboy [PS3]" />
+                            </StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="assaultRifleRadioButtonChecked" />
+                                <TextBlock Text="Assault Rifle [360]" />
+                            </StackPanel>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <RadioButton GroupName="Model" Checked="marioRadioButtonChecked" />
+                                <TextBlock Text="Mario [Wii]" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>

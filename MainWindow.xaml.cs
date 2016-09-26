@@ -63,10 +63,6 @@ namespace Soft3DEngine
             _meshes = loadModelJSON(_lastLoadedModel);
             _camera.Position = new Vector3((float)_cameraPositionXSlider.Value, (float)_cameraPositionYSlider.Value, (float)_cameraPositionZSlider.Value);
             _camera.Target = Vector3.Zero;
-
-            //_meshes = loadModelJSON("Mario.model.json");
-            //_camera.Position = new Vector3(0.0f, 1.8f, 10.0f);
-            //_camera.Target = new Vector3(0.0f, 1.8f, 0.0f);
         }
 
         private List<Mesh> loadModelJSON(string fileName)
@@ -205,6 +201,30 @@ namespace Soft3DEngine
         {
             _meshes = loadModelJSON("Suzanne.model.json");
             _lastLoadedModel = "Suzanne.model.json";
+        }
+
+        private void arwingRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Arwing.model.json");
+            _lastLoadedModel = "Arwing.model.json";
+        }
+
+        private void deagleRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Deagle.model.json");
+            _lastLoadedModel = "Deagle.model.json";
+        }
+
+        private void sackboyRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("Sackboy.model.json");
+            _lastLoadedModel = "Sackboy.model.json";
+        }
+
+        private void assaultRifleRadioButtonChecked(object sender, RoutedEventArgs e)
+        {
+            _meshes = loadModelJSON("AssaultRifle.model.json");
+            _lastLoadedModel = "AssaultRifle.model.json";
         }
 
         private void marioRadioButtonChecked(object sender, RoutedEventArgs e)
